@@ -31,8 +31,6 @@
 
       devShells.default = pkgs.mkShell rec {
         nativeBuildInputs = with pkgs; [
-          # Tools
-          blender
           # Rust Compiler
           cargo
           rustc
@@ -40,6 +38,11 @@
           clippy
           pkg-config
           llvmPackages.bintools
+          # Tools
+          blender
+          # Web
+          trunk
+          wasm-pack
         ];
 
         buildInputs = with pkgs; [
