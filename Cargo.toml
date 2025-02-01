@@ -37,18 +37,28 @@ codegen-units = 1
 strip = true
 
 [features]
-default = []
-debug = []
+default = ["dev"]
+debug = [
+    "dep:bevy-inspector-egui",
+    "dep:iyes_perf_ui",
+]
 dev = [
     "bevy/dynamic_linking", "debug"
 ]
 
 [dependencies]
 bevy = { version = "0.15.1" }
+bevy_asset_loader = { version = "0.22.0" }
+bevy-inspector-egui = { version = "0.28.1", optional = true }
+iyes_perf_ui = { git = "https://github.com/IyesGames/iyes_perf_ui.git", branch = "main", optional = true }
+bevy_tweening = "0.12.0"
+rand = "0.9.0"
+leafwing-input-manager = "0.16.0"
+hexmap = { path = "crates/hexmap" }
 
 [workspace]
 members = [
-    # "crates/*",
+    "crates/*",
 ]
 resolver = "2"
 
