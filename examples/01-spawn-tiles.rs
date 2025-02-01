@@ -6,14 +6,18 @@ use bevy::{asset::AssetMetaCheck, prelude::*};
 
 use game::prelude::*;
 use hexmap::HexMap;
+use rand::prelude::*;
 
 #[derive(Resource, Default, Deref, DerefMut)]
-pub(crate) struct HexMapRing(pub u32);
+struct HexMapRing(pub u32);
 
 #[derive(Resource, Default, Deref, DerefMut)]
-pub struct HexMapResource(HexMap);
+struct HexMapResource(HexMap);
 
-pub struct DemoPlugin;
+#[derive(Resource, Deref, DerefMut)]
+struct HexMapRng(StdRng);
+
+struct DemoPlugin;
 
 impl Plugin for DemoPlugin {
     fn build(&self, app: &mut App) {
@@ -41,9 +45,10 @@ impl Plugin for DemoPlugin {
 
         app.insert_resource(HexMapResource(HexMap::new(2.0 / 3.0f32.sqrt())));
         app.insert_resource(HexMapRing(0));
+        app.insert_resource(HexMapRng(StdRng::from_os_rng()));
 
         app.add_systems(OnEnter(GameStates::Playing), setup_game);
-        app.add_systems(Update, update_ring.run_if(in_state(GameStates::Playing)));
+        app.add_systems(Update, (update_ring, update_camera_zoom).run_if(in_state(GameStates::Playing)));
     }
 }
 
@@ -55,6 +60,7 @@ fn setup_game(mut commands: Commands, hexmap: Res<HexMapResource>, ring: Res<Hex
         commands.spawn((
             Name::new("TestingTile"),
             HexTile,
+            HexTileKind::Empty,
             Visibility::default(),
             Transform::from_translation(translation),
             StateScoped(GameStates::Playing),
@@ -67,6 +73,7 @@ fn update_ring(
     hexmap: Res<HexMapResource>,
     mut ring: ResMut<HexMapRing>,
     keys: Res<ButtonInput<KeyCode>>,
+    mut rng: ResMut<HexMapRng>,
 ) {
     if keys.just_pressed(KeyCode::Space) {
         **ring += 1;
@@ -75,37 +82,23 @@ fn update_ring(
             let coord = hexmap.axial_to_pixel(hex);
             let translation = coord.extend(0.0).xzy();
 
-            /*
-            let tween_move = Tween::new(
-                EaseFunction::QuadraticOut,
-                std::time::Duration::from_millis(500),
-                TransformPositionLens {
-                    start: Vec3::new(0.0, -5.0, 0.0),
-                    end: Vec3::new(0.0, 0.0, 0.0),
-                },
-            );
-
-            let tween_scale = Tween::new(
-                EaseFunction::QuadraticOut,
-                std::time::Duration::from_millis(500),
-                TransformScaleLens {
-                    start: Vec3::new(0.5, 0.5, 0.5),
-                    end: Vec3::new(1.0, 1.0, 1.0),
-                },
-            );
-
-            let _track = Tracks::new([tween_move, tween_scale]);
-            */
-
             commands.spawn((
                 Name::new("TestingTile"),
                 HexTile,
+                HexTileKind::random(&mut *rng),
                 Visibility::default(),
                 Transform::from_translation(translation),
                 StateScoped(GameStates::Playing),
             ));
         }
     }
+}
+
+fn update_camera_zoom(
+    ring: Res<HexMapRing>,
+    mut viewport_height: ResMut<ViewportHeight>,
+) {
+    **viewport_height = 6.0 + 2.0 * **ring as f32;
 }
 
 fn main() {

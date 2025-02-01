@@ -19,7 +19,10 @@ impl Plugin for RenderPlugin {
 
 fn setup_hex_render(mut commands: Commands, game_assets: Res<GameAssets>) {
     commands.insert_resource(HexRenderAssets {
-        hex_grass: game_assets.hex_grass.clone(),
-        trees_a_large: game_assets.trees_a_large.clone(),
+        base: game_assets.hex_base.clone(),
+        tree: game_assets.hex_tree.clone(),
+        stone: game_assets.hex_stone.clone(),
+        dirt: game_assets.hex_dirt.clone(),
+        wheat: game_assets.hex_wheat.clone(),
     });
 }

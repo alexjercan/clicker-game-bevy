@@ -1,11 +1,14 @@
 use bevy::prelude::*;
 
-use super::HexTile;
+use super::{HexTile, HexTileKind};
 
 #[derive(Resource, Clone, Debug, Default)]
 pub struct HexRenderAssets {
-    pub hex_grass: Handle<Gltf>,
-    pub trees_a_large: Handle<Gltf>,
+    pub base: Handle<Gltf>,
+    pub tree: Handle<Gltf>,
+    pub stone: Handle<Gltf>,
+    pub dirt: Handle<Gltf>,
+    pub wheat: Handle<Gltf>,
 }
 
 #[derive(Component, Debug, Default)]
@@ -27,11 +30,11 @@ impl Plugin for HexRenderPlugin {
 
 fn add_hex_render(
     mut commands: Commands,
-    q_hex: Query<Entity, (With<HexTile>, Without<HexTileRender>)>,
+    q_hex: Query<(Entity, &HexTileKind), (With<HexTile>, Without<HexTileRender>)>,
     game_assets: Res<HexRenderAssets>,
     gltf_assets: Res<Assets<Gltf>>,
 ) {
-    for entity in &q_hex {
+    for (entity, kind) in &q_hex {
         commands
             .entity(entity)
             .insert(HexTileRender)
@@ -42,19 +45,61 @@ fn add_hex_render(
                         Transform::from_xyz(0.0, 0.0, 0.0),
                         GlobalTransform::default(),
                         SceneRoot(
-                            gltf_assets.get(&game_assets.hex_grass).unwrap().scenes[0].clone(),
+                            gltf_assets.get(&game_assets.base).unwrap().scenes[0].clone(),
                         ),
                     ))
                     .with_children(|parent| {
-                        parent.spawn((
-                            Name::new("TestingTreeMesh"),
-                            Transform::from_xyz(0.0, 0.0, 0.0),
-                            GlobalTransform::default(),
-                            SceneRoot(
-                                gltf_assets.get(&game_assets.trees_a_large).unwrap().scenes[0]
-                                    .clone(),
-                            ),
-                        ));
+                        match kind {
+                            HexTileKind::Empty => {
+                                parent.spawn((
+                                    Name::new("TestingEmptyMesh"),
+                                    Transform::from_xyz(0.0, 0.0, 0.0),
+                                    GlobalTransform::default(),
+                                ));
+                            },
+                            HexTileKind::Tree => {
+                                parent.spawn((
+                                    Name::new("TestingTreeMesh"),
+                                    Transform::from_xyz(0.0, 0.0, 0.0),
+                                    GlobalTransform::default(),
+                                    SceneRoot(
+                                        gltf_assets.get(&game_assets.tree).unwrap().scenes[0]
+                                            .clone(),
+                                    ),
+                                ));
+                            },
+                            HexTileKind::Stone => {
+                                parent.spawn((
+                                    Name::new("TestingStoneMesh"),
+                                    Transform::from_xyz(0.0, 0.0, 0.0),
+                                    GlobalTransform::default(),
+                                    SceneRoot(
+                                        gltf_assets.get(&game_assets.stone).unwrap().scenes[0]
+                                            .clone(),
+                                    ),
+                                ));
+                            },
+                            HexTileKind::Wheat => {
+                                parent.spawn((
+                                    Name::new("TestingDirtMesh"),
+                                    Transform::from_xyz(0.0, 0.0, 0.0),
+                                    GlobalTransform::default(),
+                                    SceneRoot(
+                                        gltf_assets.get(&game_assets.dirt).unwrap().scenes[0]
+                                            .clone(),
+                                    ),
+                                ));
+                                parent.spawn((
+                                    Name::new("TestingWheatMesh"),
+                                    Transform::from_xyz(0.0, 0.0, 0.0),
+                                    GlobalTransform::default(),
+                                    SceneRoot(
+                                        gltf_assets.get(&game_assets.wheat).unwrap().scenes[0]
+                                            .clone(),
+                                    ),
+                                ));
+                            },
+                        }
                     });
             });
     }

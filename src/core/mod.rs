@@ -6,7 +6,7 @@ use bevy_asset_loader::prelude::*;
 #[cfg(feature = "debug")]
 use crate::debug::*;
 
-use crate::{camera::*, render::*, light::*};
+use crate::{camera::*, render::*, light::*, tweening::*};
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
 pub enum GameStates {
@@ -18,9 +18,15 @@ pub enum GameStates {
 #[derive(AssetCollection, Resource)]
 pub struct GameAssets {
     #[asset(path = "gltf/tiles/base/hex_grass.gltf")]
-    pub hex_grass: Handle<Gltf>,
+    pub hex_base: Handle<Gltf>,
     #[asset(path = "gltf/decoration/nature/trees_A_large.gltf")]
-    pub trees_a_large: Handle<Gltf>,
+    pub hex_tree: Handle<Gltf>,
+    #[asset(path = "gltf/decoration/nature/hills_A.gltf")]
+    pub hex_stone: Handle<Gltf>,
+    #[asset(path = "gltf/buildings/neutral/building_dirt.gltf")]
+    pub hex_dirt: Handle<Gltf>,
+    #[asset(path = "gltf/buildings/neutral/building_grain.gltf")]
+    pub hex_wheat: Handle<Gltf>,
 }
 
 pub struct CorePlugin;
@@ -30,6 +36,7 @@ impl Plugin for CorePlugin {
         app.add_plugins(RenderPlugin);
         app.add_plugins(CameraPlugin);
         app.add_plugins(LightPlugin);
+        app.add_plugins(TweeningPlugin);
 
         #[cfg(feature = "debug")]
         app.add_plugins(DebugPlugin);
@@ -61,6 +68,7 @@ fn setup_playing(mut commands: Commands) {
         Name::new("Camera3D"),
         Camera3d::default(),
         Transform::from_xyz(-15.0, 15.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
+        CameraOrtho::default(),
         StateScoped(GameStates::Playing),
     ));
 }

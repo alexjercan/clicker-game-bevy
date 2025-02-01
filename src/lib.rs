@@ -13,6 +13,8 @@ mod debug;
 
 pub(crate) mod light;
 pub(crate) mod render;
+pub(crate) mod tweening;
+pub(crate) mod meth;
 
 pub mod camera;
 pub mod core;
