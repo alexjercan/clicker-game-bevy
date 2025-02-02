@@ -1,8 +1,10 @@
+//! Tweening plugin for the game.
+
 use bevy::prelude::*;
 
-use crate::{core::*, hex::*};
+use crate::core::*;
 
-pub(crate) struct TweeningPlugin;
+pub(super) struct TweeningPlugin;
 
 impl Plugin for TweeningPlugin {
     fn build(&self, app: &mut App) {

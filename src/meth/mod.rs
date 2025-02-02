@@ -1,3 +1,5 @@
+//! Math utilities for the game.
+
 use bevy::prelude::*;
 
 pub trait LerpSnap {

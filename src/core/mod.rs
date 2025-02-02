@@ -6,7 +6,12 @@ use bevy_asset_loader::prelude::*;
 #[cfg(feature = "debug")]
 use crate::debug::*;
 
-use crate::{camera::*, render::*, light::*, tweening::*};
+use self::{light::*, render::*, tweening::*};
+use crate::{camera::*, hex::*, levelxp::*};
+
+mod light;
+mod render;
+mod tweening;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
 pub enum GameStates {
@@ -33,9 +38,12 @@ pub struct CorePlugin;
 
 impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(RenderPlugin);
         app.add_plugins(CameraPlugin);
+        app.add_plugins(LevelXPPlugin);
+        app.add_plugins(HexPlugin);
+
         app.add_plugins(LightPlugin);
+        app.add_plugins(RenderPlugin);
         app.add_plugins(TweeningPlugin);
 
         #[cfg(feature = "debug")]
@@ -52,6 +60,19 @@ impl Plugin for CorePlugin {
 
         app.add_systems(OnEnter(GameStates::AssetLoading), setup_asset_loading);
         app.add_systems(OnEnter(GameStates::Playing), setup_playing);
+
+        app.configure_sets(
+            Update,
+            CameraPluginSet.run_if(in_state(GameStates::Playing)),
+        );
+        app.configure_sets(
+            Update,
+            LevelXPPluginSet.run_if(in_state(GameStates::Playing)),
+        );
+        app.configure_sets(
+            Update,
+            HexPluginSet.run_if(in_state(GameStates::Playing)),
+        );
     }
 }
 

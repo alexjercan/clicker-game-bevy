@@ -26,5 +26,6 @@ fn main() {
     );
 
     app.add_plugins(CorePlugin);
+
     app.run();
 }

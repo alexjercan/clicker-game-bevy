@@ -1,3 +1,5 @@
+//! Rendering plugin for Bevy that provides a simple hexagonal tile renderer.
+
 use bevy::prelude::*;
 
 use super::{HexTile, HexTileKind};

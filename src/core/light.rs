@@ -1,18 +1,14 @@
+//! Light plugin for the game.
+
 use bevy::prelude::*;
 
 use crate::core::*;
 
-#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct LightPluginSet;
-
-pub struct LightPlugin;
+pub(super) struct LightPlugin;
 
 impl Plugin for LightPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
-            Update,
-            setup_light.in_set(LightPluginSet).run_if(run_once),
-        );
+        app.add_systems(OnEnter(GameStates::Playing), setup_light);
     }
 }
 

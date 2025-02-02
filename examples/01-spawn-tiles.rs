@@ -5,14 +5,10 @@
 use bevy::{asset::AssetMetaCheck, prelude::*};
 
 use game::prelude::*;
-use hexmap::HexMap;
 use rand::prelude::*;
 
 #[derive(Resource, Default, Deref, DerefMut)]
 struct HexMapRing(pub u32);
-
-#[derive(Resource, Default, Deref, DerefMut)]
-struct HexMapResource(HexMap);
 
 #[derive(Resource, Deref, DerefMut)]
 struct HexMapRng(StdRng);
@@ -43,7 +39,6 @@ impl Plugin for DemoPlugin {
 
         app.add_plugins(CorePlugin);
 
-        app.insert_resource(HexMapResource(HexMap::new(2.0 / 3.0f32.sqrt())));
         app.insert_resource(HexMapRing(0));
         app.insert_resource(HexMapRng(StdRng::from_os_rng()));
 

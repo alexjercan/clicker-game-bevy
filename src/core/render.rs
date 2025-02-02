@@ -1,8 +1,10 @@
+//! Rendering plugin for the game.
+
 use bevy::prelude::*;
 
-use crate::{core::*, hex::*};
+use crate::core::*;
 
-pub(crate) struct RenderPlugin;
+pub(super) struct RenderPlugin;
 
 impl Plugin for RenderPlugin {
     fn build(&self, app: &mut App) {

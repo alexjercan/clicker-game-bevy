@@ -1,15 +1,19 @@
+//! Camera plugin for Bevy that provides a simple orthographic camera with smooth zooming.
+
 use bevy::{prelude::*, render::camera::ScalingMode};
 
 use crate::meth::*;
 
-/// Target Value for the camera's view height
+/// Target value for the camera's view height. When this value is changed the camera will smoothly
+/// match the new value.
 #[derive(Resource, Default, Deref, DerefMut)]
-pub struct ViewportHeight(f32);
+pub struct ViewportHeight(pub f32);
 
 #[derive(Component, Debug)]
 pub struct CameraOrtho {
+    /// The smoothing factor for the camera's view height
     pub smoothing: f32,
-    /// Initial viewport height
+    /// Initial viewport height of the camera
     pub viewport_height: f32,
 }
 
@@ -34,8 +38,6 @@ pub struct CameraPlugin;
 
 impl Plugin for CameraPlugin {
     fn build(&self, app: &mut App) {
-        // This is the height of the camera's view
-        // it will increase to accommodate more tiles
         app.insert_resource(ViewportHeight(6.0));
 
         app.add_systems(Update, setup_camera.in_set(CameraPluginSet));
