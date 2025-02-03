@@ -7,6 +7,7 @@ pub mod prelude {
     pub use crate::core::*;
     pub use crate::hex::*;
     pub use crate::levelxp::*;
+    pub use crate::skilltree::*;
 }
 
 #[cfg(feature = "debug")]
@@ -18,3 +19,4 @@ pub mod camera;
 pub mod core;
 pub mod hex;
 pub mod levelxp;
+pub mod skilltree;

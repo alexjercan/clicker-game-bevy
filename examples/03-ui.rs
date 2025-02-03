@@ -1,3 +1,7 @@
+//! This examples showcases spawning tiles on level up
+
+#![allow(clippy::type_complexity)]
+
 use bevy::{asset::AssetMetaCheck, prelude::*};
 
 use game::prelude::*;
@@ -9,15 +13,15 @@ struct HexMapRing(pub u32);
 #[derive(Resource, Deref, DerefMut)]
 struct HexMapRng(StdRng);
 
-struct MainPlugin;
+struct DemoPlugin;
 
-impl Plugin for MainPlugin {
+impl Plugin for DemoPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(
             DefaultPlugins
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        title: "Clicker".to_string(),
+                        title: "Example Spawn Tiles".to_string(),
                         // Bind to canvas included in `index.html`
                         canvas: Some("#bevy".to_owned()),
                         fit_canvas_to_parent: true,
@@ -35,12 +39,10 @@ impl Plugin for MainPlugin {
 
         app.add_plugins(CorePlugin);
 
-        app.insert_resource(HexMapRing(0));
+        app.insert_resource(HexMapRing(2));
         app.insert_resource(HexMapRng(StdRng::from_os_rng()));
 
         app.add_systems(OnEnter(GameStates::Playing), setup_game);
-
-        // TODO: Which systems should we move out
         app.add_systems(
             Update,
             update_selected_hex.run_if(in_state(GameStates::Playing)),
@@ -64,16 +66,14 @@ fn setup_game(
     ring: Res<HexMapRing>,
     mut rng: ResMut<HexMapRng>,
 ) {
-    // Maybe we should load the settings from a file + save/load mechanics
     commands.spawn((
         Name::new("TestingLevelXP"),
         LevelXP::default(),
         NextLevelXP(10),
-        SkillTreePoints(1),
+        SkillTreePoints::default(),
         StateScoped(GameStates::Playing),
     ));
 
-    // We want to have UI in the game
     commands.spawn((
         Name::new("TestingRootUI"),
         RootUI,
@@ -177,6 +177,6 @@ fn update_camera_zoom(ring: Res<HexMapRing>, mut viewport_height: ResMut<Viewpor
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(MainPlugin);
+    app.add_plugins(DemoPlugin);
     app.run();
 }

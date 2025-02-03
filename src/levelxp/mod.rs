@@ -2,6 +2,10 @@
 
 use bevy::prelude::*;
 
+mod ui;
+
+pub use ui::*;
+
 /// The player's and experience points.
 #[derive(Component, Default, Debug, Deref, DerefMut)]
 pub struct LevelXP(pub u32);

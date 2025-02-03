@@ -6,18 +6,27 @@ use bevy_asset_loader::prelude::*;
 #[cfg(feature = "debug")]
 use crate::debug::*;
 
-use self::{light::*, render::*, tweening::*};
-use crate::{camera::*, hex::*, levelxp::*};
+use self::{light::*, render::*, tweening::*, ui::*};
+use crate::{camera::*, hex::*, levelxp::*, skilltree::*};
 
 mod light;
 mod render;
 mod tweening;
+mod ui;
+
+pub use self::ui::RootUI;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
 pub enum GameStates {
     #[default]
     AssetLoading,
     Playing,
+}
+
+#[derive(AssetCollection, Resource)]
+pub struct UIAssets {
+    #[asset(path = "undefined.png")]
+    pub skill_tree_points_alert: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -40,11 +49,13 @@ impl Plugin for CorePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(CameraPlugin);
         app.add_plugins(LevelXPPlugin);
+        app.add_plugins(SkillTreePlugin);
         app.add_plugins(HexPlugin);
 
         app.add_plugins(LightPlugin);
         app.add_plugins(RenderPlugin);
         app.add_plugins(TweeningPlugin);
+        app.add_plugins(UIPlugin);
 
         #[cfg(feature = "debug")]
         app.add_plugins(DebugPlugin);
@@ -55,6 +66,7 @@ impl Plugin for CorePlugin {
         app.add_loading_state(
             LoadingState::new(GameStates::AssetLoading)
                 .continue_to_state(GameStates::Playing)
+                .load_collection::<UIAssets>()
                 .load_collection::<GameAssets>(),
         );
 
@@ -71,8 +83,9 @@ impl Plugin for CorePlugin {
         );
         app.configure_sets(
             Update,
-            HexPluginSet.run_if(in_state(GameStates::Playing)),
+            SkillTreePluginSet.run_if(in_state(GameStates::Playing)),
         );
+        app.configure_sets(Update, HexPluginSet.run_if(in_state(GameStates::Playing)));
     }
 }
 

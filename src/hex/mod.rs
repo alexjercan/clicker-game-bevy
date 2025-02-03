@@ -2,8 +2,8 @@
 
 use bevy::prelude::*;
 
-pub mod render;
-pub mod tweening;
+mod render;
+mod tweening;
 
 use hexmap::HexMap;
 pub use render::*;
