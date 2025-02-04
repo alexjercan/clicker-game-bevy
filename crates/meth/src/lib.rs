@@ -1,6 +1,6 @@
 //! Math utilities for the game.
 
-use bevy::prelude::*;
+use glam::*;
 
 pub trait LerpSnap {
     fn lerp_and_snap(&self, to: Self, smoothness: f32, dt: f32) -> Self;

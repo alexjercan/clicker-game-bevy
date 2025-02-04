@@ -4,6 +4,7 @@ use bevy::prelude::*;
 
 use super::{HexTile, HexTileKind};
 
+/// The assets used for rendering hexagonal tiles.
 #[derive(Resource, Clone, Debug, Default)]
 pub struct HexRenderAssets {
     pub base: Handle<Gltf>,
@@ -43,7 +44,7 @@ fn add_hex_render(
             .with_children(|parent| {
                 parent
                     .spawn((
-                        Name::new("TestingTileMesh"),
+                        Name::new("HexTileMesh"),
                         Transform::from_xyz(0.0, 0.0, 0.0),
                         GlobalTransform::default(),
                         SceneRoot(
@@ -54,14 +55,14 @@ fn add_hex_render(
                         match kind {
                             HexTileKind::Empty => {
                                 parent.spawn((
-                                    Name::new("TestingEmptyMesh"),
+                                    Name::new("HexEmptyMesh"),
                                     Transform::from_xyz(0.0, 0.0, 0.0),
                                     GlobalTransform::default(),
                                 ));
                             },
                             HexTileKind::Tree => {
                                 parent.spawn((
-                                    Name::new("TestingTreeMesh"),
+                                    Name::new("HexTreeMesh"),
                                     Transform::from_xyz(0.0, 0.0, 0.0),
                                     GlobalTransform::default(),
                                     SceneRoot(
@@ -72,7 +73,7 @@ fn add_hex_render(
                             },
                             HexTileKind::Stone => {
                                 parent.spawn((
-                                    Name::new("TestingStoneMesh"),
+                                    Name::new("HexStoneMesh"),
                                     Transform::from_xyz(0.0, 0.0, 0.0),
                                     GlobalTransform::default(),
                                     SceneRoot(
@@ -83,7 +84,7 @@ fn add_hex_render(
                             },
                             HexTileKind::Wheat => {
                                 parent.spawn((
-                                    Name::new("TestingDirtMesh"),
+                                    Name::new("HexDirtMesh"),
                                     Transform::from_xyz(0.0, 0.0, 0.0),
                                     GlobalTransform::default(),
                                     SceneRoot(
@@ -92,7 +93,7 @@ fn add_hex_render(
                                     ),
                                 ));
                                 parent.spawn((
-                                    Name::new("TestingWheatMesh"),
+                                    Name::new("HexWheatMesh"),
                                     Transform::from_xyz(0.0, 0.0, 0.0),
                                     GlobalTransform::default(),
                                     SceneRoot(

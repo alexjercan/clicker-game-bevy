@@ -1,0 +1,10 @@
+[package]
+name = "hex"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.15.1" }
+bevy_tweening = "0.12.0"
+hexmap = { path = "../hexmap" }
+rand = "0.9.0"

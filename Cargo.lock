@@ -1661,10 +1661,13 @@ dependencies = [
  "bevy_asset_loader",
  "bevy_tweening",
  "embed-resource",
+ "hex",
  "hexmap",
  "iyes_perf_ui",
  "leafwing-input-manager",
+ "ortho_camera",
  "rand 0.9.0",
+ "skilltree",
 ]
 
 [[package]]
@@ -2624,6 +2627,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fbf6a919d6cf397374f7dfeeea91d974c7c0a7221d0d0f4f20d859d329e53fcc"
 
 [[package]]
+name = "hex"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_tweening",
+ "hexmap",
+ "rand 0.9.0",
+]
+
+[[package]]
 name = "hexasphere"
 version = "15.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3008,6 +3021,13 @@ dependencies = [
  "log",
  "objc",
  "paste",
+]
+
+[[package]]
+name = "meth"
+version = "0.1.0"
+dependencies = [
+ "glam",
 ]
 
 [[package]]
@@ -3483,6 +3503,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ba0b26cec2e24f08ed8bb31519a9333140a6599b867dac464bb150bdb796fd43"
 dependencies = [
  "libredox",
+]
+
+[[package]]
+name = "ortho_camera"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "meth",
 ]
 
 [[package]]
@@ -4114,6 +4142,13 @@ name = "simd-adler32"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
+
+[[package]]
+name = "skilltree"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
 
 [[package]]
 name = "skrifa"

@@ -2,7 +2,7 @@
 
 use bevy::{prelude::*, render::camera::ScalingMode};
 
-use crate::meth::*;
+use meth::*;
 
 /// Target value for the camera's view height. When this value is changed the camera will smoothly
 /// match the new value.
