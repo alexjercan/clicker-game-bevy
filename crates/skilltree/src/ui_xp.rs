@@ -1,4 +1,4 @@
-//! UI Plugin for the Skill Tree XP
+//! UI Plugin for the XP Bar of the plugin.
 
 use bevy::prelude::*;
 
@@ -6,19 +6,21 @@ use super::{LevelXP, NextLevelXP, SkillTreePoints};
 
 /// The assets used for showing UI
 #[derive(Resource, Clone, Debug, Default)]
-pub struct SkillTreeUIAssets {
+pub struct LevelXPBarUIAssets {
     pub skill_tree_points: Handle<Image>,
 }
 
-/// Component used to indicate where the XP UI will spawn as a child.
+/// Component used to indicate where the XP Bar UI should be placed.
 #[derive(Component, Debug, Default)]
-pub struct SkillTreeUIRoot;
+pub struct LevelXPBarUIRoot;
 
 /// Component used to indicate the fill of the XP bar.
 #[derive(Component, Debug, Default)]
 pub struct LevelXPBarFill;
 
 /// Component used to indicate the number of skill points available to use.
+/// This is used as an alert next to the XP bar to indicate that the player has skill points to
+/// use.
 #[derive(Component, Debug, Default)]
 pub struct SkillTreePointsUI;
 
@@ -26,29 +28,40 @@ const LEVEL_XP_UI_BAR_WIDTH: f32 = 200.0;
 const LEVEL_XP_UI_BAR_HEIGHT: f32 = 24.0;
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
-pub struct SkillTreeUIPluginSet;
+pub struct LevelXPBarUIPluginSet;
 
 #[derive(Debug)]
-pub struct SkillTreeUIPlugin;
+pub struct LevelXPBarUIPlugin;
 
-impl Plugin for SkillTreeUIPlugin {
+impl Plugin for LevelXPBarUIPlugin {
     fn build(&self, app: &mut App) {
         // TODO: Can we have a better way to add assets?
-        app.init_resource::<SkillTreeUIAssets>();
+        //
+        // One option that I can think of is to have the path to the asset in the plugin and then
+        // we load them via a resource. Since they are also being loaded by bevy_asset_loader, we
+        // can just use them directly. It is kind of scuffed, but it can work. For now I will leave
+        // it as it is.
+        app.init_resource::<LevelXPBarUIAssets>();
 
-        app.add_systems(Update, setup_ui.in_set(SkillTreeUIPluginSet));
+        app.add_systems(Update, setup_bar_ui.in_set(LevelXPBarUIPluginSet));
 
         app.add_systems(
             Update,
-            (update_level_xp_ui, update_skill_tree_points_ui).in_set(SkillTreeUIPluginSet),
+            (
+                // Update the XP bar UI
+                update_level_xp_ui,
+                // Update the alert that shows if you have skill points available
+                update_skill_tree_points_ui,
+            )
+                .in_set(LevelXPBarUIPluginSet),
         );
     }
 }
 
-fn setup_ui(
+fn setup_bar_ui(
     mut commands: Commands,
-    q_root: Query<Entity, With<SkillTreeUIRoot>>,
-    ui_assets: Res<SkillTreeUIAssets>,
+    q_root: Query<Entity, With<LevelXPBarUIRoot>>,
+    ui_assets: Res<LevelXPBarUIAssets>,
     mut has_run: Local<bool>,
 ) {
     let Ok(root) = q_root.get_single() else {

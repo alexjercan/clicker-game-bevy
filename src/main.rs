@@ -3,9 +3,6 @@
 #![allow(clippy::type_complexity)]
 
 #[cfg(feature = "debug")]
-mod debug;
-
-#[cfg(feature = "debug")]
 use debug::*;
 
 use bevy::{asset::AssetMetaCheck, prelude::*};
@@ -44,6 +41,8 @@ pub enum ClickStates {
 pub struct UIAssets {
     #[asset(path = "undefined.png")]
     pub skill_tree_points: Handle<Image>,
+    #[asset(path = "undefined.png")]
+    pub skill_start: Handle<Image>,
 }
 
 #[derive(AssetCollection, Resource)]
@@ -65,6 +64,14 @@ struct HexMapRing(pub u32);
 
 #[derive(Resource, Deref, DerefMut)]
 struct HexMapRng(StdRng);
+
+#[derive(Debug, Component, Clone, Copy, Default, PartialEq, Eq)]
+pub enum HexSkills {
+    #[default]
+    Start,
+    Expand(u32),
+    Tools(u32),
+}
 
 struct MainPlugin;
 
@@ -93,7 +100,7 @@ impl Plugin for MainPlugin {
 
         app.add_plugins(CameraPlugin);
         app.add_plugins(HexPlugin);
-        app.add_plugins(SkillTreePlugin);
+        app.add_plugins(SkillTreePlugin::<HexSkills>::default());
 
         #[cfg(feature = "debug")]
         app.add_plugins(DebugPlugin);
@@ -118,11 +125,7 @@ impl Plugin for MainPlugin {
 
         app.add_systems(
             Update,
-            (
-                update_click_state,
-                update_selected_hex,
-                update_camera_zoom,
-            )
+            (update_click_state, update_selected_hex, update_camera_zoom)
                 .run_if(in_state(GameStates::Playing)),
         );
         app.add_systems(
@@ -136,6 +139,12 @@ impl Plugin for MainPlugin {
             (handle_click_level_up,)
                 .run_if(in_state(GameStates::Playing))
                 .run_if(in_state(ClickStates::LevelUp)),
+        );
+        app.add_systems(
+            Update,
+            (handle_skill_tree_choose,)
+                .run_if(in_state(GameStates::Playing))
+                .run_if(in_state(ClickStates::LevelUpMenu)),
         );
 
         app.configure_sets(
@@ -186,7 +195,7 @@ fn setup_playing(mut commands: Commands, game_assets: Res<GameAssets>, ui_assets
                 height: Val::Percent(100.0),
                 flex_direction: FlexDirection::Column,
                 align_items: AlignItems::Center,
-                justify_items: JustifyItems::Center,
+                justify_content: JustifyContent::Start,
                 padding: UiRect::all(Val::Px(10.0)),
                 ..default()
             },
@@ -204,6 +213,21 @@ fn setup_playing(mut commands: Commands, game_assets: Res<GameAssets>, ui_assets
                     column_gap: Val::Px(10.0),
                     ..default()
                 },
+                LevelXPBarUIRoot,
+            ));
+            // The skill tree UI
+            parent.spawn((
+                Name::new("SkillTreeUI"),
+                Visibility::Hidden,
+                Node {
+                    width: Val::Percent(50.0),
+                    height: Val::Percent(50.0),
+                    flex_direction: FlexDirection::Column,
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    margin: UiRect::all(Val::Auto),
+                    ..default()
+                },
                 SkillTreeUIRoot,
             ));
         });
@@ -216,9 +240,22 @@ fn setup_playing(mut commands: Commands, game_assets: Res<GameAssets>, ui_assets
         wheat: game_assets.hex_wheat.clone(),
     });
 
+    commands.insert_resource(LevelXPBarUIAssets {
+        skill_tree_points: ui_assets.skill_tree_points.clone(),
+    });
+
     commands.insert_resource(SkillTreeUIAssets {
         skill_tree_points: ui_assets.skill_tree_points.clone(),
     });
+
+    commands.insert_resource(AvailableSkills(vec![
+        Skill {
+            name: "Start".to_string(),
+            description: "Start the game by choosing this skill. This will spawn a tile that you can click on to gather resources.".to_string(),
+            icon: ui_assets.skill_start.clone(),
+            component: HexSkills::Start,
+        },
+    ]));
 
     // TODO: Maybe we should load the settings from a file + save/load mechanics
     commands.spawn((
@@ -317,33 +354,38 @@ fn handle_clicked_selected(
 }
 
 fn handle_click_level_up(
+    mut q_skill: Query<&mut Visibility, With<SkillTreeUIRoot>>,
+    buttons: Res<ButtonInput<MouseButton>>,
+    mut next_state: ResMut<NextState<ClickStates>>,
+) {
+    if buttons.just_pressed(MouseButton::Left) {
+        for mut visibility in q_skill.iter_mut() {
+            *visibility = Visibility::Visible;
+        }
+        next_state.set(ClickStates::LevelUpMenu);
+    }
+}
+
+fn handle_skill_tree_choose(
     mut commands: Commands,
     hexmap: Res<HexMapResource>,
     mut ring: ResMut<HexMapRing>,
     mut rng: ResMut<HexMapRng>,
-    buttons: Res<ButtonInput<MouseButton>>,
     mut q_points: Query<&mut SkillTreePoints>,
+    mut ev_selected: EventReader<SkillTreeChooseButtonPressed<HexSkills>>,
+    mut next_state: ResMut<NextState<ClickStates>>,
+    mut q_skill: Query<&mut Visibility, With<SkillTreeUIRoot>>,
+    ui_assets: Res<UIAssets>,
+    mut available_skills: ResMut<AvailableSkills<HexSkills>>,
 ) {
     let Ok(mut points) = q_points.get_single_mut() else {
         return;
     };
 
-    if buttons.just_pressed(MouseButton::Left) {
-        if **ring == 0 {
-            let coord = hexmap.axial_to_pixel(IVec2::ZERO);
-            let translation = coord.extend(0.0).xzy();
-
-            commands.spawn((
-                Name::new("HexTile"),
-                HexTile,
-                HexTileKind::random(&mut *rng),
-                Visibility::default(),
-                Transform::from_translation(translation),
-                StateScoped(GameStates::Playing),
-            ));
-        } else {
-            for hex in hexmap.axial_ring(IVec2::ZERO, **ring) {
-                let coord = hexmap.axial_to_pixel(hex);
+    for ev in ev_selected.read() {
+        match ev.skill {
+            HexSkills::Start => {
+                let coord = hexmap.axial_to_pixel(IVec2::ZERO);
                 let translation = coord.extend(0.0).xzy();
 
                 commands.spawn((
@@ -354,16 +396,92 @@ fn handle_click_level_up(
                     Transform::from_translation(translation),
                     StateScoped(GameStates::Playing),
                 ));
+
+                **ring += 1;
+
+                **available_skills = available_skills
+                    .iter()
+                    .filter(|skill| skill.component != HexSkills::Start)
+                    .cloned()
+                    .collect();
+
+                available_skills.push(Skill {
+                    name: "Expand 1".to_string(),
+                    description:
+                        "Expand the map by 1 ring. This will make your expand skill stronger."
+                            .to_string(),
+                    icon: ui_assets.skill_start.clone(),
+                    component: HexSkills::Expand(1),
+                });
+
+                available_skills.push(Skill {
+                    name: "Tools 1".to_string(),
+                    description: "Unlock tools to gather resources faster.".to_string(),
+                    icon: ui_assets.skill_start.clone(),
+                    component: HexSkills::Tools(1),
+                });
+            }
+            HexSkills::Expand(level) => {
+                for hex in hexmap.axial_ring(IVec2::ZERO, **ring) {
+                    let coord = hexmap.axial_to_pixel(hex);
+                    let translation = coord.extend(0.0).xzy();
+
+                    commands.spawn((
+                        Name::new("HexTile"),
+                        HexTile,
+                        HexTileKind::random(&mut *rng),
+                        Visibility::default(),
+                        Transform::from_translation(translation),
+                        StateScoped(GameStates::Playing),
+                    ));
+                }
+
+                **ring += 1;
+
+                **available_skills = available_skills
+                    .iter()
+                    .filter(|skill| skill.component != HexSkills::Expand(level))
+                    .cloned()
+                    .collect();
+
+                available_skills.push(Skill {
+                        name: format!("Expand {}", level + 1),
+                        description: format!("Expand the map by 1 ring. This will make your expand skill stronger. Current level: {}", level + 1),
+                        icon: ui_assets.skill_start.clone(),
+                        component: HexSkills::Expand(level + 1),
+                    });
+            }
+            HexSkills::Tools(level) => {
+                **available_skills = available_skills
+                    .iter()
+                    .filter(|skill| skill.component != HexSkills::Tools(level))
+                    .cloned()
+                    .collect();
+
+                available_skills.push(Skill {
+                    name: format!("Tools {}", level + 1),
+                    description: format!(
+                        "Unlock tools to gather resources faster. Current level: {}",
+                        level + 1
+                    ),
+                    icon: ui_assets.skill_start.clone(),
+                    component: HexSkills::Tools(level + 1),
+                });
             }
         }
 
-        **ring += 1;
         **points -= 1;
+
+        for mut visibility in q_skill.iter_mut() {
+            *visibility = Visibility::Hidden;
+        }
+
+        next_state.set(ClickStates::Gather);
     }
 }
 
 fn update_camera_zoom(ring: Res<HexMapRing>, mut viewport_height: ResMut<ViewportHeight>) {
-    **viewport_height = 6.0 + 2.0 * **ring as f32;
+    **viewport_height = 6.0 + 1.0 * **ring as f32;
 }
 
 fn main() {

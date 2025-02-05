@@ -1,0 +1,9 @@
+[package]
+name = "debug"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.15.1" }
+bevy-inspector-egui = { version = "0.28.1" }
+iyes_perf_ui = { git = "https://github.com/IyesGames/iyes_perf_ui.git", branch = "main" }
