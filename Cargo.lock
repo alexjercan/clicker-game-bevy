@@ -1661,12 +1661,8 @@ dependencies = [
  "bevy_tweening",
  "debug",
  "embed-resource",
- "hex",
- "hexmap",
  "leafwing-input-manager",
- "ortho_camera",
  "rand 0.9.0",
- "skilltree",
 ]
 
 [[package]]
@@ -2249,6 +2245,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e6853b52649d4ac5c0bd02320cddc5ba956bdb407c4b75a2c6b75bf51500f8c"
 dependencies = [
  "simd-adler32",
+]
+
+[[package]]
+name = "fill_bar"
+version = "0.1.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]
@@ -4068,6 +4071,13 @@ dependencies = [
  "memmap2",
  "smithay-client-toolkit",
  "tiny-skia",
+]
+
+[[package]]
+name = "select_menu"
+version = "0.1.0"
+dependencies = [
+ "bevy",
 ]
 
 [[package]]

@@ -31,7 +31,7 @@ impl Plugin for DebugPlugin {
             // so that iyes_perf_ui can process any new Perf UI in the same
             // frame as we spawn the entities. Otherwise, Bevy UI will complain.
             .add_systems(Update, toggle.before(iyes_perf_ui::PerfUiSet::Setup))
-            .add_systems(Update, (draw_axes, draw_hexmap, draw_cursor))
+            .add_systems(Update, (draw_axes, draw_hexmap, draw_cursor, add_ui_border))
             .add_systems(Startup, setup);
     }
 }
@@ -121,4 +121,13 @@ fn draw_cursor(
     let point = ray.get_point(distance);
 
     gizmos.cross(point + Vec3::Y * 0.01, 0.5, Color::WHITE);
+}
+
+fn add_ui_border(
+    mut commands: Commands,
+    q_node: Query<Entity, (With<Node>, Without<Outline>)>,
+) {
+    for entity in q_node.iter() {
+        commands.entity(entity).insert(Outline::new(Val::Px(1.0), Val::Px(0.0), Color::WHITE));
+    }
 }
