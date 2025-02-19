@@ -105,8 +105,8 @@ impl HexMap {
 
     pub fn pixel_to_axial(&self, point: Vec2) -> IVec2 {
         let size = self.size;
-        let q = 2.0 / 3.0 * point.y / size;
-        let r = (-1.0 / 3.0 * point.y + 3.0f32.sqrt() / 3.0 * point.x) / size;
+        let q = (3.0f32.sqrt() / 3.0 * point.x - 1.0 / 3.0 * point.y) / size;
+        let r = 2.0 / 3.0 * point.y / size;
 
         // Axial to cube
         let s = -q - r;

@@ -81,10 +81,10 @@ fn draw_hexmap(mut gizmos: Gizmos, show_axes: Res<ShowAxes>) {
     }
 
     let size = 2.0 / 3.0f32.sqrt();
-    for q in -10..=10 {
-        for r in -10..=10 {
-            let z = size * 3.0 / 2.0 * q as f32;
-            let x = size * 3.0f32.sqrt() * (r as f32 + q as f32 / 2.0);
+    for r in -10..=10 {
+        for q in -10..=10 {
+            let x = size * 3.0f32.sqrt() * (q as f32 + r as f32 / 2.0);
+            let z = size * 3.0 / 2.0 * r as f32;
 
             let mut direction = Vec3::new(0.0, 0.0, -size);
             let rotation = Quat::from_rotation_y(PI / 3.0);

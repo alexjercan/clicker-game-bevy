@@ -1661,6 +1661,7 @@ dependencies = [
  "bevy_tweening",
  "debug",
  "embed-resource",
+ "hexmap",
  "leafwing-input-manager",
  "rand 0.9.0",
 ]
