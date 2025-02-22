@@ -2249,13 +2249,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "fill_bar"
-version = "0.1.0"
-dependencies = [
- "bevy",
-]
-
-[[package]]
 name = "fixedbitset"
 version = "0.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2637,16 +2630,6 @@ name = "hermit-abi"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fbf6a919d6cf397374f7dfeeea91d974c7c0a7221d0d0f4f20d859d329e53fcc"
-
-[[package]]
-name = "hex"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy_tweening",
- "hexmap",
- "rand 0.9.0",
-]
 
 [[package]]
 name = "hexasphere"
@@ -3518,14 +3501,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ortho_camera"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "meth",
-]
-
-[[package]]
 name = "overload"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4075,13 +4050,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "select_menu"
-version = "0.1.0"
-dependencies = [
- "bevy",
-]
-
-[[package]]
 name = "self_cell"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4161,13 +4129,6 @@ name = "simd-adler32"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
-
-[[package]]
-name = "skilltree"
-version = "0.1.0"
-dependencies = [
- "bevy",
-]
 
 [[package]]
 name = "skrifa"
