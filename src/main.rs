@@ -5,7 +5,7 @@ use bevy::{asset::AssetMetaCheck, prelude::*, render::camera::ScalingMode, windo
 use bevy_asset_loader::prelude::*;
 use bevy_tweening::lens::*;
 use bevy_tweening::*;
-use hexmap::*;
+use hexx::*;
 use rand::prelude::*;
 
 const BACKGROUND_DARK_COLOR: Color = Color::srgb(0.65, 0.65, 0.65);
@@ -54,9 +54,8 @@ struct HexTile;
 #[derive(Component, Debug, Clone)]
 struct HexGhost;
 
-// TODO: Rename to HexTileCoord
 #[derive(Component, Debug, Default, Deref, DerefMut)]
-struct HexTileAxial(IVec2);
+struct HexCoord(Hex);
 
 #[derive(Component, Debug)]
 enum HexTileKind {
@@ -90,7 +89,7 @@ struct SkillPoints(u32);
 struct HexMapRng(StdRng);
 
 #[derive(Resource, Default, Deref, DerefMut)]
-struct HexMapResource(HexMap);
+struct HexMapResource(HexLayout);
 
 #[derive(Component, Debug, Clone)]
 struct Selected;
@@ -189,7 +188,11 @@ fn main() {
     app.insert_resource(SkillPoints(1));
     app.insert_resource(XPMax(3));
     app.insert_resource(HexMapRng(StdRng::from_os_rng()));
-    app.insert_resource(HexMapResource(HexMap::new(2.0 / 3.0f32.sqrt())));
+    app.insert_resource(HexMapResource(HexLayout {
+        orientation: HexOrientation::Pointy,
+        scale: Vec2::splat(2.0 / 3.0f32.sqrt()),
+        ..default()
+    }));
 
     app.add_systems(OnEnter(GameStates::AssetLoading), setup_asset_loading);
     app.add_systems(OnEnter(GameStates::Playing), setup_playing);
@@ -249,7 +252,7 @@ fn setup_playing(
         StateScoped(GameStates::Playing),
     ));
 
-    let coord = hexmap.axial_to_pixel(IVec2::ZERO);
+    let coord = hexmap.hex_to_world_pos(Hex::ZERO);
     let translation = coord.extend(0.0).xzy();
 
     commands.spawn((
@@ -257,7 +260,7 @@ fn setup_playing(
         HexGhost,
         Visibility::default(),
         Transform::from_translation(translation),
-        HexTileAxial(hexmap.pixel_to_axial(translation.xz())),
+        HexCoord(hexmap.world_pos_to_hex(translation.xz())),
         StateScoped(GameStates::Playing),
     ));
 
@@ -360,8 +363,8 @@ fn update_selected(
     mut commands: Commands,
     hexmap: Res<HexMapResource>,
     windows: Query<&Window>,
-    q_hex: Query<(Entity, &HexTileAxial), Without<Selected>>,
-    q_selected: Query<(Entity, &HexTileAxial), With<Selected>>,
+    q_hex: Query<(Entity, &HexCoord), Without<Selected>>,
+    q_selected: Query<(Entity, &HexCoord), With<Selected>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
     mut ev_selected: EventWriter<SelectedEvent<HexTile>>,
     mut ev_deselected: EventWriter<DeselectedEvent<HexTile>>,
@@ -385,7 +388,7 @@ fn update_selected(
 
     let position = point.xz();
 
-    let cursor_coord = hexmap.pixel_to_axial(position);
+    let cursor_coord = hexmap.world_pos_to_hex(position);
 
     if let Ok((entity, hex_coord)) = q_selected.get_single() {
         if **hex_coord != cursor_coord {
@@ -398,7 +401,7 @@ fn update_selected(
 
     if let Some((entity, _)) = q_hex
         .iter()
-        .find(|(_, HexTileAxial(hex_coord))| *hex_coord == cursor_coord)
+        .find(|(_, HexCoord(hex_coord))| *hex_coord == cursor_coord)
     {
         commands.entity(entity).insert(Selected);
         ev_selected.send(SelectedEvent::new(entity));
@@ -493,8 +496,8 @@ fn clicked_ghost_spawn(
     mut commands: Commands,
     mut skill_points: ResMut<SkillPoints>,
     mut ev_clicked: EventReader<ClickedSelectedEvent<HexGhost>>,
-    q_ghost: Query<(Entity, &HexTileAxial), With<HexGhost>>,
-    q_tiles: Query<(Entity, &HexTileAxial), With<HexTile>>,
+    q_ghost: Query<(Entity, &HexCoord), With<HexGhost>>,
+    q_tiles: Query<(Entity, &HexCoord), With<HexTile>>,
     game_assets: Res<GameAssets>,
     gltf_assets: Res<Assets<Gltf>>,
     mut rng: ResMut<HexMapRng>,
@@ -504,7 +507,7 @@ fn clicked_ghost_spawn(
             if **skill_points > 0 {
                 commands.entity(entity).despawn_recursive();
 
-                let translation = hexmap.axial_to_pixel(**hex_coord).extend(0.0).xzy();
+                let translation = hexmap.hex_to_world_pos(**hex_coord).extend(0.0).xzy();
 
                 let tween_move = Tween::new(
                     EaseFunction::QuadraticOut,
@@ -532,7 +535,7 @@ fn clicked_ghost_spawn(
                         HexTile,
                         Visibility::default(),
                         Transform::from_translation(translation),
-                        HexTileAxial(**hex_coord),
+                        HexCoord(**hex_coord),
                         StateScoped(GameStates::Playing),
                     ))
                     .with_children(|parent| {
@@ -613,29 +616,27 @@ fn clicked_ghost_spawn(
                             });
                     });
 
-                hexmap
-                    .axial_ring(**hex_coord, 1)
-                    .iter()
+                hex_coord.ring(1)
                     .filter(|hex_coord| {
                         q_ghost
                             .iter()
-                            .all(|(_, HexTileAxial(ghost_coord))| *ghost_coord != **hex_coord)
+                            .all(|(_, HexCoord(ghost_coord))| *ghost_coord != *hex_coord)
                             && q_tiles
                                 .iter()
-                                .all(|(_, HexTileAxial(tile_coord))| *tile_coord != **hex_coord)
+                                .all(|(_, HexCoord(tile_coord))| *tile_coord != *hex_coord)
                     })
                     // .filter(|coord| {
                     //     coord.x.abs() <= WORLD_HALF_WIDTH && coord.y.abs() <= WORLD_HALF_HEIGHT
                     // })
-                    .for_each(|coord| {
-                        let translation = hexmap.axial_to_pixel(*coord).extend(0.0).xzy();
+                    .for_each(|hex_coord| {
+                        let translation = hexmap.hex_to_world_pos(hex_coord).extend(0.0).xzy();
 
                         commands.spawn((
                             Name::new("HexGhost"),
                             HexGhost,
                             Visibility::default(),
                             Transform::from_translation(translation),
-                            HexTileAxial(*coord),
+                            HexCoord(hex_coord),
                             StateScoped(GameStates::Playing),
                         ));
                     });
@@ -654,7 +655,7 @@ fn update_xp_value(
     if **xp_value >= **xp_max {
         **xp_value = **xp_value - **xp_max;
         **skill_points = **skill_points + 1;
-        **xp_max = **xp_max;// + 10;
+        **xp_max = **xp_max; // + 10;
     }
 }
 

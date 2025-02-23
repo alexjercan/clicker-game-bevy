@@ -1661,7 +1661,7 @@ dependencies = [
  "bevy_tweening",
  "debug",
  "embed-resource",
- "hexmap",
+ "hexx",
  "leafwing-input-manager",
  "rand 0.9.0",
 ]
@@ -2649,10 +2649,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
 
 [[package]]
-name = "hexmap"
-version = "0.1.0"
+name = "hexx"
+version = "0.20.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "aad3af3c06eb1312404d159a9b5dee86832e1fb14bf094c1badc3b7f03494f4a"
 dependencies = [
  "glam",
+ "serde",
 ]
 
 [[package]]
@@ -3016,13 +3019,6 @@ dependencies = [
  "log",
  "objc",
  "paste",
-]
-
-[[package]]
-name = "meth"
-version = "0.1.0"
-dependencies = [
- "glam",
 ]
 
 [[package]]

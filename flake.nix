@@ -3,18 +3,27 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
-    flake-utils.url = "github:numtide/flake-utils";
+    rust-overlay = {
+        url = "github:oxalica/rust-overlay";
+        inputs.nixpkgs.follows = "nixpkgs";
+    };
+    flake-utils = {
+        url = "github:numtide/flake-utils";
+        inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
     self,
     nixpkgs,
+    rust-overlay,
     flake-utils,
   }: (
     flake-utils.lib.eachDefaultSystem
     (system: let
+      overlays = [ (import rust-overlay) ];
       pkgs = import nixpkgs {
-        inherit system;
+        inherit system overlays;
 
         config = {
           allowUnfree = true;
@@ -32,10 +41,11 @@
       devShells.default = pkgs.mkShell rec {
         nativeBuildInputs = with pkgs; [
           # Rust Compiler
-          cargo
-          rustc
-          rustfmt
-          clippy
+          # cargo
+          # rustc
+          # rustfmt
+          # clippy
+          rust-bin.beta.latest.default
           pkg-config
           llvmPackages.bintools
           # Tools
