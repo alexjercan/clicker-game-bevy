@@ -1,3 +1,5 @@
+use bevy::asset::RenderAssetUsages;
+use bevy::render::mesh::{Indices, PrimitiveTopology};
 #[cfg(feature = "debug")]
 use debug::*;
 
@@ -231,7 +233,20 @@ fn setup_playing(
     game_assets: Res<GameAssets>,
     ui_assets: Res<UIAssets>,
     hexmap: Res<HexMapResource>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
+    let mesh = ColumnMeshBuilder::new(&hexmap.0, 1.0)
+        .with_subdivisions(10)
+        .with_offset(Vec3::NEG_Y * 1.0 / 2.0)
+        .build();
+    let mesh_handle = meshes.add(hexagonal_mesh(mesh));
+    let material_handle = materials.add(StandardMaterial {
+        cull_mode: None,
+        double_sided: true,
+        ..default()
+    });
+
     commands.spawn((
         Name::new("Camera3D"),
         Camera3d::default(),
@@ -261,6 +276,8 @@ fn setup_playing(
         Visibility::default(),
         Transform::from_translation(translation),
         HexCoord(hexmap.world_pos_to_hex(translation.xz())),
+        Mesh3d(mesh_handle.clone()),
+        MeshMaterial3d(material_handle.clone()),
         StateScoped(GameStates::Playing),
     ));
 
@@ -501,6 +518,8 @@ fn clicked_ghost_spawn(
     game_assets: Res<GameAssets>,
     gltf_assets: Res<Assets<Gltf>>,
     mut rng: ResMut<HexMapRng>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for event in ev_clicked.read() {
         if let Ok((entity, hex_coord)) = q_ghost.get(event.entity) {
@@ -631,12 +650,25 @@ fn clicked_ghost_spawn(
                     .for_each(|hex_coord| {
                         let translation = hexmap.hex_to_world_pos(hex_coord).extend(0.0).xzy();
 
+                        let mesh = ColumnMeshBuilder::new(&hexmap.0, 1.0)
+                            .with_subdivisions(10)
+                            .with_offset(Vec3::NEG_Y)
+                            .build();
+                        let mesh_handle = meshes.add(hexagonal_mesh(mesh));
+                        let material_handle = materials.add(StandardMaterial {
+                            cull_mode: None,
+                            double_sided: true,
+                            ..default()
+                        });
+
                         commands.spawn((
                             Name::new("HexGhost"),
                             HexGhost,
                             Visibility::default(),
                             Transform::from_translation(translation),
                             HexCoord(hex_coord),
+                            Mesh3d(mesh_handle.clone()),
+                            MeshMaterial3d(material_handle.clone()),
                             StateScoped(GameStates::Playing),
                         ));
                     });
@@ -682,3 +714,16 @@ fn update_skill_points_notification(
         }
     }
 }
+
+ pub fn hexagonal_mesh(mesh_info: MeshInfo) -> Mesh {
+     Mesh::new(
+         PrimitiveTopology::TriangleList,
+         // Means you won't interact with the mesh on the CPU afterwards
+         // Check bevy docs for more information
+         RenderAssetUsages::RENDER_WORLD,
+     )
+     .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, mesh_info.vertices)
+     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_info.normals)
+     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, mesh_info.uvs)
+     .with_inserted_indices(Indices::U16(mesh_info.indices))
+ }
