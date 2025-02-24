@@ -10,6 +10,10 @@ use bevy_tweening::*;
 use hexx::*;
 use rand::prelude::*;
 
+mod materials;
+
+use materials::prelude::*;
+
 const BACKGROUND_DARK_COLOR: Color = Color::srgb(0.65, 0.65, 0.65);
 const HIGHLIGHT_COLOR: Color = Color::srgb(0.0, 0.5, 0.0);
 
@@ -169,6 +173,7 @@ fn main() {
     #[cfg(feature = "debug")]
     app.add_plugins(DebugPlugin);
 
+    app.add_plugins(FadingMaterialPlugin);
     app.add_plugins(bevy_tweening::TweeningPlugin);
 
     app.add_event::<ClickedSelectedEvent<HexGhost>>();
@@ -234,18 +239,14 @@ fn setup_playing(
     ui_assets: Res<UIAssets>,
     hexmap: Res<HexMapResource>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<FadingMaterial>>,
 ) {
     let mesh = ColumnMeshBuilder::new(&hexmap.0, 1.0)
         .with_subdivisions(10)
         .with_offset(Vec3::NEG_Y * 1.0 / 2.0)
         .build();
     let mesh_handle = meshes.add(hexagonal_mesh(mesh));
-    let material_handle = materials.add(StandardMaterial {
-        cull_mode: None,
-        double_sided: true,
-        ..default()
-    });
+    let material_handle = materials.add(FadingMaterial::new(BACKGROUND_DARK_COLOR));
 
     commands.spawn((
         Name::new("Camera3D"),
@@ -519,7 +520,7 @@ fn clicked_ghost_spawn(
     gltf_assets: Res<Assets<Gltf>>,
     mut rng: ResMut<HexMapRng>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<FadingMaterial>>,
 ) {
     for event in ev_clicked.read() {
         if let Ok((entity, hex_coord)) = q_ghost.get(event.entity) {
@@ -655,11 +656,7 @@ fn clicked_ghost_spawn(
                             .with_offset(Vec3::NEG_Y)
                             .build();
                         let mesh_handle = meshes.add(hexagonal_mesh(mesh));
-                        let material_handle = materials.add(StandardMaterial {
-                            cull_mode: None,
-                            double_sided: true,
-                            ..default()
-                        });
+                        let material_handle = materials.add(FadingMaterial::new(BACKGROUND_DARK_COLOR));
 
                         commands.spawn((
                             Name::new("HexGhost"),
