@@ -17,8 +17,8 @@ use materials::prelude::*;
 const BACKGROUND_DARK_COLOR: Color = Color::srgb(0.65, 0.65, 0.65);
 const HIGHLIGHT_COLOR: Color = Color::srgb(0.0, 0.5, 0.0);
 
-const WORLD_HALF_WIDTH: i32 = 4;
-const WORLD_HALF_HEIGHT: i32 = 1;
+const WORLD_HALF_WIDTH: i32 = 2;
+const WORLD_HALF_HEIGHT: i32 = 2;
 const HEX_UP_SCALE: f32 = 1.1;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
@@ -645,9 +645,9 @@ fn clicked_ghost_spawn(
                                 .iter()
                                 .all(|(_, HexCoord(tile_coord))| *tile_coord != *hex_coord)
                     })
-                    // .filter(|coord| {
-                    //     coord.x.abs() <= WORLD_HALF_WIDTH && coord.y.abs() <= WORLD_HALF_HEIGHT
-                    // })
+                    .filter(|hex_coord| {
+                        hex_coord.x.abs() <= WORLD_HALF_WIDTH && hex_coord.y.abs() <= WORLD_HALF_HEIGHT
+                    })
                     .for_each(|hex_coord| {
                         let translation = hexmap.hex_to_world_pos(hex_coord).extend(0.0).xzy();
 
