@@ -49,6 +49,7 @@ rand = "0.9.0"
 leafwing-input-manager = "0.16.0"
 debug = { path = "crates/debug", optional = true }
 hexx = "0.20.0"
+getrandom = { version = "0.3", features = ["wasm_js"] }
 
 [workspace]
 members = [

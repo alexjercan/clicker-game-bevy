@@ -45,7 +45,9 @@
           # rustc
           # rustfmt
           # clippy
-          rust-bin.beta.latest.default
+          (rust-bin.beta.latest.default.override {
+                targets = [ "wasm32-unknown-unknown" ];
+            })
           pkg-config
           llvmPackages.bintools
           # Tools
