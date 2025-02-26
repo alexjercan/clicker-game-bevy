@@ -1,3 +1,5 @@
+use std::f32::consts::FRAC_PI_2;
+
 use bevy::asset::RenderAssetUsages;
 use bevy::render::mesh::{Indices, PrimitiveTopology};
 #[cfg(feature = "debug")]
@@ -196,7 +198,7 @@ fn main() {
     app.insert_resource(XPMax(3));
     app.insert_resource(HexMapRng(StdRng::from_os_rng()));
     app.insert_resource(HexMapResource(HexLayout {
-        orientation: HexOrientation::Pointy,
+        orientation: HexOrientation::Flat,
         scale: Vec2::splat(2.0 / 3.0f32.sqrt()),
         ..default()
     }));
@@ -251,7 +253,7 @@ fn setup_playing(
     commands.spawn((
         Name::new("Camera3D"),
         Camera3d::default(),
-        Transform::from_xyz(-15.0, 15.0, 0.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(0.0, 15.0, -15.0).looking_at(Vec3::ZERO, Vec3::Y),
         Projection::from(OrthographicProjection {
             scaling_mode: ScalingMode::FixedVertical {
                 viewport_height: 6.0,
@@ -264,7 +266,7 @@ fn setup_playing(
     commands.spawn((
         Name::new("DirectionalLight"),
         DirectionalLight::default(),
-        Transform::from_xyz(-1.0, 1.0, 1.0).looking_at(Vec3::ZERO, Vec3::Y),
+        Transform::from_xyz(10.0, 15.0, -15.0).looking_at(Vec3::ZERO, Vec3::Y),
         StateScoped(GameStates::Playing),
     ));
 
@@ -562,7 +564,7 @@ fn clicked_ghost_spawn(
                         parent
                             .spawn((
                                 Name::new("HexTileRender"),
-                                Transform::from_xyz(0.0, -5.0, 0.0),
+                                Transform::from_xyz(0.0, -5.0, 0.0).with_rotation(Quat::from_rotation_y(FRAC_PI_2)),
                                 Animator::new(track),
                             ))
                             .with_children(|parent| {
