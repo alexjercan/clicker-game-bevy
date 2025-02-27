@@ -123,11 +123,10 @@ fn draw_cursor(
     gizmos.cross(point + Vec3::Y * 0.01, 0.5, Color::WHITE);
 }
 
-fn add_ui_border(
-    mut commands: Commands,
-    q_node: Query<Entity, (With<Node>, Without<Outline>)>,
-) {
+fn add_ui_border(mut commands: Commands, q_node: Query<Entity, (With<Node>, Without<Outline>)>) {
     for entity in q_node.iter() {
-        commands.entity(entity).insert(Outline::new(Val::Px(1.0), Val::Px(0.0), Color::WHITE));
+        commands
+            .entity(entity)
+            .insert(Outline::new(Val::Px(1.0), Val::Px(0.0), Color::WHITE));
     }
 }

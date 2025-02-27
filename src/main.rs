@@ -1,3 +1,5 @@
+#![allow(clippy::too_many_arguments)]
+
 use std::f32::consts::FRAC_PI_2;
 
 use bevy::asset::RenderAssetUsages;
@@ -12,15 +14,12 @@ use bevy_tweening::*;
 use hexx::*;
 use rand::prelude::*;
 
-mod materials;
-
-use materials::prelude::*;
+use game::materials::prelude::*;
 
 const BACKGROUND_DARK_COLOR: Color = Color::srgb(0.65, 0.65, 0.65);
 const HIGHLIGHT_COLOR: Color = Color::srgb(0.0, 0.5, 0.0);
 
-const WORLD_HALF_WIDTH: i32 = 2;
-const WORLD_HALF_HEIGHT: i32 = 2;
+const WORLD_HALF_RADIUS: u32 = 3;
 const HEX_UP_SCALE: f32 = 1.1;
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
@@ -195,7 +194,7 @@ fn main() {
 
     app.init_resource::<XPValue>();
     app.insert_resource(SkillPoints(1));
-    app.insert_resource(XPMax(3));
+    app.insert_resource(XPMax(10));
     app.insert_resource(HexMapRng(StdRng::from_os_rng()));
     app.insert_resource(HexMapResource(HexLayout {
         orientation: HexOrientation::Flat,
@@ -230,14 +229,13 @@ fn main() {
 fn setup_asset_loading(mut commands: Commands) {
     commands.spawn((
         Name::new("CameraUI"),
-        Camera2d::default(),
+        Camera2d,
         StateScoped(GameStates::AssetLoading),
     ));
 }
 
 fn setup_playing(
     mut commands: Commands,
-    game_assets: Res<GameAssets>,
     ui_assets: Res<UIAssets>,
     hexmap: Res<HexMapResource>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -256,7 +254,7 @@ fn setup_playing(
         Transform::from_xyz(0.0, 15.0, -15.0).looking_at(Vec3::ZERO, Vec3::Y),
         Projection::from(OrthographicProjection {
             scaling_mode: ScalingMode::FixedVertical {
-                viewport_height: 6.0,
+                viewport_height: 12.0,
             },
             ..OrthographicProjection::default_3d()
         }),
@@ -564,7 +562,8 @@ fn clicked_ghost_spawn(
                         parent
                             .spawn((
                                 Name::new("HexTileRender"),
-                                Transform::from_xyz(0.0, -5.0, 0.0).with_rotation(Quat::from_rotation_y(FRAC_PI_2)),
+                                Transform::from_xyz(0.0, -5.0, 0.0)
+                                    .with_rotation(Quat::from_rotation_y(FRAC_PI_2)),
                                 Animator::new(track),
                             ))
                             .with_children(|parent| {
@@ -638,7 +637,8 @@ fn clicked_ghost_spawn(
                             });
                     });
 
-                hex_coord.ring(1)
+                hex_coord
+                    .ring(1)
                     .filter(|hex_coord| {
                         q_ghost
                             .iter()
@@ -648,7 +648,7 @@ fn clicked_ghost_spawn(
                                 .all(|(_, HexCoord(tile_coord))| *tile_coord != *hex_coord)
                     })
                     .filter(|hex_coord| {
-                        hex_coord.x.abs() <= WORLD_HALF_WIDTH && hex_coord.y.abs() <= WORLD_HALF_HEIGHT
+                        HexBounds::new(Hex::ZERO, WORLD_HALF_RADIUS).is_in_bounds(*hex_coord)
                     })
                     .for_each(|hex_coord| {
                         let translation = hexmap.hex_to_world_pos(hex_coord).extend(0.0).xzy();
@@ -658,7 +658,8 @@ fn clicked_ghost_spawn(
                             .with_offset(Vec3::NEG_Y)
                             .build();
                         let mesh_handle = meshes.add(hexagonal_mesh(mesh));
-                        let material_handle = materials.add(FadingMaterial::new(BACKGROUND_DARK_COLOR));
+                        let material_handle =
+                            materials.add(FadingMaterial::new(BACKGROUND_DARK_COLOR));
 
                         commands.spawn((
                             Name::new("HexGhost"),
@@ -684,9 +685,9 @@ fn update_xp_value(
     mut skill_points: ResMut<SkillPoints>,
 ) {
     if **xp_value >= **xp_max {
-        **xp_value = **xp_value - **xp_max;
-        **skill_points = **skill_points + 1;
-        **xp_max = **xp_max; // + 10;
+        **xp_value -= **xp_max;
+        **skill_points += 1;
+        **xp_max += 10;
     }
 }
 
@@ -714,15 +715,15 @@ fn update_skill_points_notification(
     }
 }
 
- pub fn hexagonal_mesh(mesh_info: MeshInfo) -> Mesh {
-     Mesh::new(
-         PrimitiveTopology::TriangleList,
-         // Means you won't interact with the mesh on the CPU afterwards
-         // Check bevy docs for more information
-         RenderAssetUsages::RENDER_WORLD,
-     )
-     .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, mesh_info.vertices)
-     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_info.normals)
-     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, mesh_info.uvs)
-     .with_inserted_indices(Indices::U16(mesh_info.indices))
- }
+pub fn hexagonal_mesh(mesh_info: MeshInfo) -> Mesh {
+    Mesh::new(
+        PrimitiveTopology::TriangleList,
+        // Means you won't interact with the mesh on the CPU afterwards
+        // Check bevy docs for more information
+        RenderAssetUsages::RENDER_WORLD,
+    )
+    .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, mesh_info.vertices)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_info.normals)
+    .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, mesh_info.uvs)
+    .with_inserted_indices(Indices::U16(mesh_info.indices))
+}

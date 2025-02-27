@@ -30,7 +30,7 @@ pub struct FadingMaterialPlugin;
 impl Plugin for FadingMaterialPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(MaterialPlugin::<FadingMaterial>::default());
-            // .add_systems(Update, update_material.in_set(FadingMaterialSet));
+        // .add_systems(Update, update_material.in_set(FadingMaterialSet));
     }
 }
 
@@ -47,7 +47,9 @@ impl Plugin for FadingMaterialPlugin {
 
 impl FadingMaterial {
     pub fn new(color: Color) -> Self {
-        Self { color: color.into() }
+        Self {
+            color: color.into(),
+        }
     }
 }
 

@@ -8,6 +8,10 @@ homepage = "https://github.com/alexjercan/clicker-game-bevy"
 description = "Clicker game where you try to collect as many resources."
 categories = ["games"]
 
+[lib]
+name = "game"
+path = "src/lib.rs"
+
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1
