@@ -1,6 +1,7 @@
 use bevy::prelude::*;
-use clicker_assets::{GameState, UiAssets, BACKGROUND_DARK_COLOR};
+use clicker_assets::{UiAssets, BACKGROUND_DARK_COLOR};
 use clicker_gameplay::{GameplaySystems, SkillPoints, XpMax, XpValue};
+use clicker_state::GameState;
 
 const HIGHLIGHT_COLOR: Color = Color::srgb(0.0, 0.5, 0.0);
 

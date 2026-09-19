@@ -30,6 +30,6 @@ nix develop --command trunk build --release
 ```
 
 For interactive checks, record the start state, actions, expected facts, actual
-facts, and visual observations. Stop after the affected flow. The project does
-not yet have a probe or no-render command; do not advertise one until its task
-ships.
+facts, and visual observations. Stop after the affected flow. Use an armed
+`autopilot_*` example for a bounded gameplay flow. Use `CLICKER_PROBE_*`
+artifacts for simulation facts. No-render artifacts cannot prove visuals.

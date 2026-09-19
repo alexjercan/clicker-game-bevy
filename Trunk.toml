@@ -1,5 +1,6 @@
 [build]
 public_url = "./"
+no_default_features = true
 
 [serve]
 port = 8080

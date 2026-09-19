@@ -8,7 +8,13 @@ publish = false
 [features]
 default = []
 debug = ["dep:clicker_debug"]
-dev = ["bevy/dynamic_linking", "debug"]
+dev = [
+    "bevy/dynamic_linking",
+    "bevy/trace",
+    "debug",
+    "dep:tracing-chrome",
+    "dep:tracing-subscriber",
+]
 
 [dependencies]
 bevy.workspace = true
@@ -16,4 +22,11 @@ clicker_animation = { path = "../clicker_animation" }
 clicker_assets = { path = "../clicker_assets" }
 clicker_debug = { path = "../clicker_debug", optional = true }
 clicker_gameplay = { path = "../clicker_gameplay" }
+clicker_state = { path = "../clicker_state" }
+clicker_tile = { path = "../clicker_tile" }
 clicker_ui = { path = "../clicker_ui" }
+hexx = "0.25.0"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+tracing-chrome = { version = "0.7.2", optional = true }
+tracing-subscriber = { version = "0.3.20", optional = true }

@@ -1,5 +1,5 @@
 [package]
-name = "clicker_gameplay"
+name = "clicker_state"
 version = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
@@ -7,5 +7,3 @@ publish = false
 
 [dependencies]
 bevy.workspace = true
-clicker_state = { path = "../clicker_state" }
-clicker_tile = { path = "../clicker_tile" }

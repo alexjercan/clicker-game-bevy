@@ -33,12 +33,22 @@ codegen-units = 1
 strip = true
 
 [features]
-default = ["dev"]
+default = []
 debug = ["clicker_core/debug"]
-dev = ["clicker_core/dev"]
+dev = ["debug", "clicker_core/dev", "dep:clicker_probe"]
 
 [dependencies]
 clicker_core = { path = "crates/clicker_core" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+clap = { version = "4.5.48", features = ["derive"] }
+clicker_probe = { path = "crates/clicker_probe", optional = true }
+
+[dev-dependencies]
+bevy.workspace = true
+clicker_autopilot = { path = "crates/clicker_autopilot" }
+clicker_probe = { path = "crates/clicker_probe" }
+serde_json = "1.0.145"
 
 [workspace]
 members = ["crates/*"]

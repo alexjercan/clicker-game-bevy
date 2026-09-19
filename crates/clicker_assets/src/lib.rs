@@ -2,17 +2,11 @@ mod materials;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use clicker_state::GameState;
 
 pub use materials::prelude::{FadingMaterial, FadingMaterialPlugin};
 
 pub const BACKGROUND_DARK_COLOR: Color = Color::srgb(0.65, 0.65, 0.65);
-
-#[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
-pub enum GameState {
-    #[default]
-    AssetLoading,
-    Playing,
-}
 
 #[derive(AssetCollection, Resource)]
 pub struct UiAssets {

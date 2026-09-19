@@ -8,3 +8,4 @@ publish = false
 [dependencies]
 bevy.workspace = true
 bevy-inspector-egui = "0.37.0"
+bevy_dev_tools = "0.19.1"

@@ -9,3 +9,4 @@ publish = false
 bevy.workspace = true
 clicker_assets = { path = "../clicker_assets" }
 clicker_gameplay = { path = "../clicker_gameplay" }
+clicker_state = { path = "../clicker_state" }
