@@ -1,0 +1,14 @@
+   Compiling clicker v0.1.0 (/home/alex/personal/clicker-game-bevy)
+    Finished `dev` profile [optimized + debuginfo] target(s) in 1.09s
+     Running `target/debug/clicker`
+[2m2026-09-19T14:33:49.847908Z[0m [32m INFO[0m [2mbevy_app::terminal_ctrl_c_handler[0m[2m:[0m Skipping installing `Ctrl+C` handler as one was already installed. Please call `TerminalCtrlCHandlerPlugin::gracefully_exit` in your own `Ctrl+C` handler if you want Bevy to gracefully exit on `Ctrl+C`.
+[2m2026-09-19T14:33:49.859308Z[0m [33m WARN[0m [2mwinit::platform_impl::linux::x11::xdisplay[0m[2m:[0m error setting XSETTINGS; Xft options won't reload automatically
+[2m2026-09-19T14:33:49.947399Z[0m [32m INFO[0m [2mbevy_render::renderer[0m[2m:[0m AdapterInfo { name: "NVIDIA GeForce RTX 3060 Ti", vendor: 4318, device: 9417, device_type: DiscreteGpu, device_pci_bus_id: "0000:01:00.0", driver: "NVIDIA", driver_info: "595.84", backend: Vulkan, subgroup_min_size: 32, subgroup_max_size: 32, transient_saves_memory: false }
+[2m2026-09-19T14:33:50.261566Z[0m [32m INFO[0m [2mbevy_pbr::cluster[0m[2m:[0m GPU clustering is supported on this device.
+[2m2026-09-19T14:33:50.261605Z[0m [32m INFO[0m [2mbevy_render::batching::gpu_preprocessing[0m[2m:[0m GPU preprocessing is fully supported on this device.
+[2m2026-09-19T14:33:50.262028Z[0m [32m INFO[0m [2mbevy_egui::render[0m[2m:[0m Using bindless_mode_array_size 16 (Device maximum 1048576)
+[2m2026-09-19T14:33:50.262165Z[0m [32m INFO[0m [2mbevy_winit::system[0m[2m:[0m Creating new window Clicker (65v0)
+[2m2026-09-19T14:33:50.263379Z[0m [32m INFO[0m [2mwinit::platform_impl::linux::x11::window[0m[2m:[0m Guessed window scale factor: 1
+[2m2026-09-19T14:33:50.265782Z[0m [33m WARN[0m [2mbevy_diagnostic::system_information_diagnostics_plugin::internal[0m[2m:[0m This platform and/or configuration is not supported!
+[2m2026-09-19T14:33:50.405266Z[0m [33m WARN[0m [2mbevy_render::view::window[0m[2m:[0m Couldn't get swap chain texture after configuring. Cause: 'Outdated'
+[2m2026-09-19T14:33:50.487927Z[0m [32m INFO[0m [2mbevy_asset_loader::loading_state::systems[0m[2m:[0m Loading state 'clicker::GameStates::AssetLoading' is done

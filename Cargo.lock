@@ -2223,14 +2223,65 @@ dependencies = [
 name = "clicker"
 version = "0.1.0"
 dependencies = [
+ "clicker_core",
+ "embed-resource",
+]
+
+[[package]]
+name = "clicker_animation"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy_tweening",
+]
+
+[[package]]
+name = "clicker_assets"
+version = "0.1.0"
+dependencies = [
  "bevy",
  "bevy_asset_loader",
+]
+
+[[package]]
+name = "clicker_core"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "clicker_animation",
+ "clicker_assets",
+ "clicker_debug",
+ "clicker_gameplay",
+ "clicker_ui",
+]
+
+[[package]]
+name = "clicker_debug"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "bevy-inspector-egui",
+]
+
+[[package]]
+name = "clicker_gameplay"
+version = "0.1.0"
+dependencies = [
+ "bevy",
  "bevy_rand",
- "bevy_tweening",
- "debug",
- "embed-resource",
+ "clicker_animation",
+ "clicker_assets",
  "hexx",
  "rand_core",
+]
+
+[[package]]
+name = "clicker_ui"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "clicker_assets",
+ "clicker_gameplay",
 ]
 
 [[package]]
@@ -2529,14 +2580,6 @@ name = "data-encoding"
 version = "2.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0e60eed09d8c01d3cee5b7d30acb059b76614c918fa0f992e0dd6eeb10daad6f"
-
-[[package]]
-name = "debug"
-version = "0.1.0"
-dependencies = [
- "bevy",
- "bevy-inspector-egui",
-]
 
 [[package]]
 name = "derive_more"

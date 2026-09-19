@@ -1,0 +1,19 @@
+[package]
+name = "clicker_core"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+publish = false
+
+[features]
+default = []
+debug = ["dep:clicker_debug"]
+dev = ["bevy/dynamic_linking", "debug"]
+
+[dependencies]
+bevy.workspace = true
+clicker_animation = { path = "../clicker_animation" }
+clicker_assets = { path = "../clicker_assets" }
+clicker_debug = { path = "../clicker_debug", optional = true }
+clicker_gameplay = { path = "../clicker_gameplay" }
+clicker_ui = { path = "../clicker_ui" }

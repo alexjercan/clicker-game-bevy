@@ -1,0 +1,10 @@
+[package]
+name = "clicker_animation"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+publish = false
+
+[dependencies]
+bevy.workspace = true
+bevy_tweening = "0.16.0"

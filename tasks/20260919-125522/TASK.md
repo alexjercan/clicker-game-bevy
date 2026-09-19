@@ -1,39 +1,59 @@
 # Refactor the game into focused Bevy modules
 
-- STATUS: OPEN
+- STATUS: CLOSED
 - PRIORITY: 80
-- TAGS: architecture,bevy
+- TAGS: architecture, bevy
 
 ## User facts
 
 - Split the codebase into nicer modules without adding or changing features.
 - Keep the game basic.
+- Use Nova Protocol's crate and composition-root structure as a reference.
+- Add unit tests and do not add features.
+- Prefix every crate package and directory with `clicker_`.
+- Split asset loading, gameplay, tween animation, and UI into separate crates.
+- Inherit version, edition, and license from workspace package metadata in every package.
+
+## Decisions
+
+- `clicker_assets` owns loading state, asset collections, the fading material, and the loading transition.
+- `clicker_animation` owns the tween plugin and transform tween constructors.
+- `clicker_gameplay` owns world, interaction, and progression behavior and depends on assets and animation.
+- `clicker_ui` owns the top bar and depends on assets and gameplay.
+- `clicker_core` only composes the app and subsystem plugins.
+- `clicker_debug` remains separate and optional.
+- The root library remains a re-export facade and `main.rs` only launches the app.
 
 ## Agent findings
 
-- Nearly all game behavior, state, resources, events, UI construction, selection, progression, world spawning, and app assembly are in src/main.rs.
-- src/lib.rs only exports materials.
-- The debug crate exists separately, but its role and API must be audited.
+- The original `src/main.rs` owned 732 lines of app assembly, state, assets, world spawning, interaction, progression, UI, and mesh conversion.
+- The original library only exported the fading material.
+- The later deterministic harness task is `20260919-125523`; this task uses direct X11 input and rendered frame evidence without adding harness code.
 
 ## Delivery
 
-- Capture the current behavior and startup/plugin ordering before moving code.
-- Make main.rs a thin CLI/app launch entry point.
-- Move app construction into the library and split ownership into focused modules such as app/state, assets/loading, world/hex map, interaction/selection, progression, UI, and materials. Final names must follow actual ownership found during implementation.
-- Give each subsystem a plugin and named system sets where ordering matters. Keep shared types in the lowest owning module and keep public surface minimal.
-- Replace the crate-wide too_many_arguments allowance with bundles, system params, or narrow justified exceptions that comply with the marked-comment policy.
-- Preserve asset paths, state transitions, random tile distribution, world bounds, XP thresholds, skill-point spending, tweens, camera, UI, and click behavior.
-- Delete obsolete re-exports and the monolithic implementations after callers move.
+- Add `crates/clicker_animation`, `crates/clicker_assets`, `crates/clicker_core`, `crates/clicker_gameplay`, and `crates/clicker_ui`.
+- Rename the existing debug package and directory to `clicker_debug` and `crates/clicker_debug`.
+- Keep dependencies directed from core to subsystems, UI to gameplay and assets, and gameplay to animation and assets.
+- Use explicit gameplay system sets for selection, click reactions, progression, and UI ordering.
+- Use focused system parameters instead of the crate-wide `too_many_arguments` allowance.
+- Delete the old monolithic implementation and old root materials module.
+- Preserve asset paths, state transitions, world bounds, tile distribution, XP thresholds, skill-point spending, tweens, camera, UI, and click behavior.
 
 ## Verification
 
-- Add unit tests only for stable pure rules such as XP rollover, world bounds, and tile-kind selection under a fixed seed.
-- Use the deterministic runtime harness to prove one complete player flow: load, place the first tile, click it to earn XP, cross a threshold, and place another tile.
-- Compare captured world facts and a rendered frame with the pre-refactor baseline.
+- Unit tests pin XP rollover, radius-three world bounds, and tile-kind selection with `WyRand` seed `[7; 8]`.
+- `evidence/baseline.png` and `evidence/post-initial.png` record the initial rendered result before and after the refactor.
+- `evidence/post-first-placement.png` records first placement and neighboring ghosts.
+- `evidence/post-flow.png` records two placed tiles after ten clicks granted and spent the next skill point.
+- `evidence/post-split-flow.png` repeats the complete flow after the subsystem crate split.
+- `evidence/REPORT.md` records the exact checks, actions, limitations, and observations.
 
 ## Done when
 
-- main.rs only parses/dispatches and launches the app.
-- Every system and type has one clear module owner.
+- `main.rs` only launches the app.
+- Every system and type has one clear crate and module owner.
+- Every package inherits workspace version, edition, and license metadata.
 - No duplicate compatibility path remains.
-- The baseline flow and visible result are unchanged.
+- Pure gameplay rules have focused unit tests.
+- Native tests, Clippy, formatting, wasm release build, and the rendered player flow pass.

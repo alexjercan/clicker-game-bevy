@@ -1,1 +1,1 @@
-pub mod materials;
+pub use clicker_core::*;

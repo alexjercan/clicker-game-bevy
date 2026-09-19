@@ -325,6 +325,7 @@ fn source_files(root: &Path) -> Vec<PathBuf> {
         .filter(|path| !path.is_empty())
         .filter_map(|path| std::str::from_utf8(path).ok())
         .map(PathBuf::from)
+        .filter(|path| root.join(path).is_file())
         .filter(|path| syntax(path).is_some())
         .collect()
 }

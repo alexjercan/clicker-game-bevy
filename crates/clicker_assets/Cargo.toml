@@ -1,0 +1,10 @@
+[package]
+name = "clicker_assets"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+publish = false
+
+[dependencies]
+bevy.workspace = true
+bevy_asset_loader = "0.27.0"

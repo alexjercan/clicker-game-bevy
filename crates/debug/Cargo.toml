@@ -1,9 +1,0 @@
-[package]
-name = "debug"
-version = "0.1.0"
-edition = "2021"
-publish = false
-
-[dependencies]
-bevy.workspace = true
-bevy-inspector-egui = "0.37.0"

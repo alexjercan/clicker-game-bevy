@@ -1,0 +1,11 @@
+[package]
+name = "clicker_ui"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+publish = false
+
+[dependencies]
+bevy.workspace = true
+clicker_assets = { path = "../clicker_assets" }
+clicker_gameplay = { path = "../clicker_gameplay" }
