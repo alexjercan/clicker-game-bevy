@@ -1,6 +1,6 @@
 # Align CI and release checks with the modernized project
 
-- STATUS: OPEN
+- STATUS: CLOSED
 - PRIORITY: 45
 - TAGS: ci,release
 
@@ -14,6 +14,13 @@
 - CI currently runs broad Cargo checks on three operating systems.
 - A deploy-page workflow publishes the wasm game through GitHub Pages.
 - Release workflows build native and web artifacts but do not yet gate generated dependency licenses or the requested comment policy.
+
+## Decisions
+
+- Retain GitHub Pages only as a manually dispatched deployment of the playable wasm launcher. Do not add a separate site or landing page.
+- Keep one Ubuntu quality job and separate native, wasm, dependency-license, and Nix jobs. Cross-platform release jobs remain responsible for platform builds.
+- Use `rust-toolchain.toml` as the only Rust toolchain version source.
+- Generate dependency licenses before packaging and reject any native or web staging tree that lacks assets, credits, the dependency-license manifest, or the project license.
 
 ## Delivery
 

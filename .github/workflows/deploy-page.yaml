@@ -13,10 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly-2026-07-03
+      - name: Resolve pinned Rust toolchain
+        run: rustup show active-toolchain
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
       - name: Install trunk
@@ -31,9 +29,10 @@ jobs:
       - name: Add wasm target
         run: |
           rustup target add wasm32-unknown-unknown
-      - name: Build Release
-        run: |
-          trunk build --release
+      - name: Build playable wasm release
+        run: trunk build --release --locked
+      - name: Inspect playable wasm release
+        run: scripts/check-release-contents.sh web dist
       - name: optimize Wasm
         uses: NiklasEi/wasm-opt-action@v2
         with:

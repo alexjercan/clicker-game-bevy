@@ -32,9 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly-2026-07-03
+      - name: Resolve pinned Rust toolchain
+        run: rustup show active-toolchain
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-about
@@ -58,22 +57,15 @@ jobs:
         with:
           name: third-party-licenses
           path: credits
-      - name: Remove build script
-        run: |
-          rm build.rs
-      - name: Install rust toolchain for Apple Silicon
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly-2026-07-03
-          targets: aarch64-apple-darwin
+      - name: Resolve pinned Rust toolchain
+        run: rustup show active-toolchain
+      - name: Install Apple Silicon target
+        run: rustup target add aarch64-apple-darwin
       - name: Build release for Apple Silicon
         run: |
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) cargo build --locked --profile dist --no-default-features --target=aarch64-apple-darwin
-      - name: Install rust toolchain for Apple x86
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly-2026-07-03
-          targets: x86_64-apple-darwin
+      - name: Install Apple x86 target
+        run: rustup target add x86_64-apple-darwin
       - name: Build release for x86 Apple
         run: |
           SDKROOT=$(xcrun -sdk macosx --show-sdk-path) cargo build --locked --profile dist --no-default-features --target=x86_64-apple-darwin
@@ -82,10 +74,13 @@ jobs:
           lipo -create -output target/dist/${{ env.GAME_EXECUTABLE_NAME }} target/aarch64-apple-darwin/dist/${{ env.GAME_EXECUTABLE_NAME }} target/x86_64-apple-darwin/dist/${{ env.GAME_EXECUTABLE_NAME }}
       - name: Create release
         run: |
-          mkdir -p build/macos/src/Game.app/Contents/MacOS/assets
-          cp -r assets/ build/macos/src/Game.app/Contents/MacOS/assets
-          cp -r credits/ build/macos/src/Game.app/Contents/MacOS/credits
+          mkdir -p build/macos/src/Game.app/Contents/MacOS
+          rm -rf build/macos/src/Game.app/Contents/MacOS/assets build/macos/src/Game.app/Contents/MacOS/credits
+          cp -r assets build/macos/src/Game.app/Contents/MacOS/assets
+          cp -r credits build/macos/src/Game.app/Contents/MacOS/credits
+          cp LICENSE build/macos/src/Game.app/Contents/MacOS/LICENSE
           cp target/dist/${{ env.GAME_EXECUTABLE_NAME }} build/macos/src/Game.app/Contents/MacOS/
+          scripts/check-release-contents.sh native build/macos/src/Game.app/Contents/MacOS ${{ env.GAME_EXECUTABLE_NAME }}
           mv build/macos/src/Game.app build/macos/src/${{ env.GAME_OSX_APP_NAME }}.app
           ln -s /Applications build/macos/src/
           hdiutil create -fs HFS+ -volname "${{ env.GAME_OSX_APP_NAME }}" -srcfolder build/macos/src ${{ env.GAME_EXECUTABLE_NAME }}.dmg
@@ -107,10 +102,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly-2026-07-03
+      - name: Resolve pinned Rust toolchain
+        run: rustup show active-toolchain
       - uses: actions/download-artifact@v4
         with:
           name: third-party-licenses
@@ -122,13 +115,21 @@ jobs:
           cargo build --locked --profile dist --no-default-features
       - name: Prepare release
         run: |
-          mkdir target/dist/assets && cp -r assets target/dist/assets
-          mkdir target/dist/credits && cp -r credits target/dist/credits
-          chmod +x target/dist/${{ env.GAME_EXECUTABLE_NAME }}
+          rm -rf target/package
+          mkdir -p target/package
+          cp target/dist/${{ env.GAME_EXECUTABLE_NAME }} target/package/
+          cp -r assets credits target/package/
+          cp LICENSE target/package/LICENSE
+          chmod +x target/package/${{ env.GAME_EXECUTABLE_NAME }}
+          scripts/check-release-contents.sh native target/package ${{ env.GAME_EXECUTABLE_NAME }}
       - name: Bundle release
+        run: tar -C target/package -czf target/dist/${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz .
+      - name: Inspect native archive
         run: |
-          cd target/dist
-          tar -czf ${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz ${{ env.GAME_EXECUTABLE_NAME }} assets credits
+          rm -rf target/archive-check
+          mkdir -p target/archive-check
+          tar -xzf target/dist/${{ env.GAME_EXECUTABLE_NAME }}_linux.tar.gz -C target/archive-check
+          scripts/check-release-contents.sh native target/archive-check ${{ env.GAME_EXECUTABLE_NAME }}
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:
@@ -148,10 +149,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly-2026-07-03
+      - name: Resolve pinned Rust toolchain
+        run: rustup show active-toolchain
       - uses: actions/download-artifact@v4
         with:
           name: third-party-licenses
@@ -160,14 +159,26 @@ jobs:
         run: |
           cargo build --locked --profile dist --no-default-features
       - name: Prepare release
+        shell: bash
         run: |
-          mkdir target/dist/assets && cp -r assets target/dist/assets
-          mkdir target/dist/credits && cp -r credits target/dist/credits
+          rm -rf target/package
+          mkdir -p target/package
+          cp target/dist/${{ env.GAME_EXECUTABLE_NAME }}.exe target/package/
+          cp -r assets credits target/package/
+          cp LICENSE target/package/LICENSE
+          scripts/check-release-contents.sh native target/package ${{ env.GAME_EXECUTABLE_NAME }}.exe
       - name: Zip release
-        uses: vimtor/action-zip@v1.1
-        with:
-          files: target/dist/assets/ target/dist/credits/ target/dist/${{ env.GAME_EXECUTABLE_NAME }}.exe
-          dest: ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip
+        shell: pwsh
+        run: Compress-Archive -Path target/package/* -DestinationPath ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip
+      - name: Inspect Windows archive
+        shell: pwsh
+        run: |
+          Expand-Archive -Path ${{ env.GAME_EXECUTABLE_NAME }}_windows.zip -DestinationPath target/archive-check
+          if (-not (Test-Path target/archive-check/${{ env.GAME_EXECUTABLE_NAME }}.exe)) { exit 1 }
+          if (-not (Test-Path target/archive-check/assets)) { exit 1 }
+          if (-not (Test-Path target/archive-check/credits/CREDITS.md)) { exit 1 }
+          if (-not (Test-Path target/archive-check/credits/THIRD-PARTY-LICENSES.md)) { exit 1 }
+          if (-not (Test-Path target/archive-check/LICENSE)) { exit 1 }
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:
@@ -185,10 +196,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install rust toolchain
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: nightly-2026-07-03
+      - name: Resolve pinned Rust toolchain
+        run: rustup show active-toolchain
       - name: Install Dependencies
         run: sudo apt-get update; sudo apt-get install pkg-config libx11-dev libasound2-dev libudev-dev
       - name: Install trunk
@@ -203,18 +212,22 @@ jobs:
         run: |
           rustup target add wasm32-unknown-unknown
       - name: Build Release
-        run: |
-          trunk build --release
+        run: trunk build --release --locked
+      - name: Inspect web release
+        run: scripts/check-release-contents.sh web dist
       - name: Optimize Wasm
         uses: NiklasEi/wasm-opt-action@v2
         with:
           file: dist/*.wasm
           options: -Os --enable-bulk-memory --enable-nontrapping-float-to-int
       - name: Zip release
-        uses: vimtor/action-zip@v1.1
-        with:
-          files: dist/
-          dest: ${{ env.GAME_EXECUTABLE_NAME }}_web.zip
+        run: cd dist && zip -r ../${{ env.GAME_EXECUTABLE_NAME }}_web.zip .
+      - name: Inspect web archive
+        run: |
+          rm -rf target/web-archive-check
+          mkdir -p target/web-archive-check
+          unzip -q ${{ env.GAME_EXECUTABLE_NAME }}_web.zip -d target/web-archive-check
+          scripts/check-release-contents.sh web target/web-archive-check
       - name: Upload release
         uses: svenstaro/upload-release-action@v2
         with:

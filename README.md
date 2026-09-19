@@ -54,10 +54,10 @@ Run project commands from the repository root:
 
 ```console
 nix develop --command cargo fmt --all -- --check
-nix develop --command cargo test --workspace --all-features
-nix develop --command cargo clippy --workspace --all-targets --all-features -- -D warnings
-nix develop --command cargo build --release --no-default-features
-nix develop --command trunk build --release
+nix develop --command cargo test --locked --workspace --all-features
+nix develop --command cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+nix develop --command cargo build --locked --release --no-default-features
+nix develop --command trunk build --release --locked
 ```
 
 ## Probe reports
