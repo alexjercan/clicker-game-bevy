@@ -1,8 +1,8 @@
 # Migrate the Nix flake to flake-parts and rust-flake
 
-- STATUS: OPEN
+- STATUS: CLOSED
 - PRIORITY: 95
-- TAGS: foundation,nix
+- TAGS: foundation, nix
 
 ## User facts
 
@@ -36,3 +36,33 @@
 - flake show exposes the intended package, app, check, and shell on supported systems.
 - The shell can compile native and wasm targets.
 - The packaged game resolves its runtime assets and shared libraries outside the repository.
+
+## Completion
+
+Replaced flake-utils and the direct rust-overlay wiring with flake-parts and
+rust-flake. Pinned nightly 2026-07-03 in the flake, rust-toolchain.toml, CI,
+deployment, and release workflows. The development shell includes native and
+wasm Rust targets, Cargo tools, Trunk, and the Linux runtime libraries.
+
+The Linux package builds the dist profile without default development features,
+wraps the executable with its runtime libraries and BEVY_ASSET_ROOT, and links
+store-owned assets and credits under share/clicker. The flake exposes the
+wrapped and unwrapped packages, default app, package check, and development
+shells. The lock now contains only the root flake-parts, nixpkgs, and rust-flake
+inputs.
+
+Verification completed:
+
+- `nix flake show --all-systems`
+- `nix flake check --print-build-logs`
+- `nix build --print-build-logs`
+- `nix develop --command cargo check --locked`
+- `nix develop --command cargo check --locked --target wasm32-unknown-unknown --no-default-features`
+- An eight-second packaged launch from `/tmp` reached the completed asset-loading
+  state before the bounded timeout.
+- Package inspection found the expected asset and credit files, all package
+  references point into the Nix store, and no working-tree path is embedded.
+
+The first package smoke attempt exposed a missing Bevy dynamic library because
+the package inherited the default development feature. The package now builds
+with `--no-default-features`; the repeated smoke launch succeeded.
