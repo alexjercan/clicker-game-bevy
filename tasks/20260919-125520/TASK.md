@@ -1,8 +1,8 @@
 # Enforce the marked-comment-only code policy
 
-- STATUS: OPEN
+- STATUS: CLOSED
 - PRIORITY: 88
-- TAGS: foundation,quality
+- TAGS: foundation, quality
 
 ## User facts
 
@@ -11,10 +11,20 @@
 - Every TODO must refer to a Tatr task.
 - Add a test that enforces the policy.
 
-## Decisions to confirm during implementation
+## Decisions
 
-- Use the explicit marker allowlist NOTE, XXX, WTF, FIXME, and TODO(<task-id>), unless the owner narrows it.
-- Apply the gate to tracked first-party source and executable build/config code. Exclude vendored assets, generated files, license text, Markdown prose, lockfiles, and required shebangs.
+- Use the project allowlist: NOTE, XXX, WTF, and TODO(<open-task-id>). FIXME and bare TODO are forbidden.
+- Check tracked and new first-party Rust, JavaScript, CSS, Windows resource, WGSL, TOML, YAML, shell, Nix, and HTML files.
+- Exclude vendored assets, generated files, license text, Markdown prose, lockfiles, and required shebangs.
+- Reject Rust inner and outer documentation comments even when their text begins with an allowed marker.
+
+## Implementation notes
+
+- Added a cargo integration test with lexical scanners for slash, hash, Nix block, and HTML comments.
+- The scanner skips quoted and Rust raw strings, URLs, shader directives, and required shebangs.
+- TODO validation reads current Tatr status and accepts only existing OPEN task IDs.
+- Removed narrative comments from the release workflow and web audio bootstrap.
+- The existing CI test command runs the policy test through cargo test.
 
 ## Delivery
 
@@ -30,6 +40,13 @@
 - Run the policy test against the complete tracked scope.
 - Mutate a fixture with // explanation, a doc comment, a block comment, and TODO(no-task), and prove each is rejected.
 - Prove marker-like text inside a string does not satisfy or trigger the test.
+
+## Verification results
+
+- The initial repository scan rejected the release workflow comment and all narrative web audio comments with paths and line numbers.
+- Fixture tests reject plain line comments, block comments, Rust documentation comments, and TODOs without an OPEN task.
+- Fixture tests accept every allowed marker and ignore marker-like text in strings.
+- Passed cargo test --all-features, cargo clippy --all-targets --all-features with warnings denied, rustfmt, and git diff validation.
 
 ## Done when
 
