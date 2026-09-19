@@ -115,6 +115,7 @@
           nativeBuildInputs = with pkgs; [
             rustToolchain
             rust-analyzer
+            cargo-about
             pkg-config
             llvmPackages.bintools
             trunk

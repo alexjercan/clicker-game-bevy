@@ -3,3 +3,4 @@ target/
 .DS_Store
 
 dist/
+credits/THIRD-PARTY-LICENSES.md

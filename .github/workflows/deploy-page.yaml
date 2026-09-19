@@ -23,6 +23,11 @@ jobs:
         uses: jetli/trunk-action@v0.4.0
         with:
           version: 'latest'
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about
+      - name: Generate dependency licenses
+        run: scripts/gen-licenses.sh
       - name: Add wasm target
         run: |
           rustup target add wasm32-unknown-unknown
@@ -33,6 +38,7 @@ jobs:
         uses: NiklasEi/wasm-opt-action@v2
         with:
           file: dist/*.wasm
+          options: -Os --enable-bulk-memory --enable-nontrapping-float-to-int
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4.2.5
         with:

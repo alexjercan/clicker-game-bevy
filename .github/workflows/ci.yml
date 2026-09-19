@@ -5,6 +5,19 @@ on:
   push:
 
 jobs:
+  licenses:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-07-03
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-about
+      - name: Check dependency licenses
+        run: scripts/gen-licenses.sh
+
   test:
     strategy:
       matrix:

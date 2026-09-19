@@ -1,8 +1,8 @@
 # Separate source art and ship KayKit asset credits
 
-- STATUS: OPEN
+- STATUS: CLOSED
 - PRIORITY: 85
-- TAGS: assets,licensing
+- TAGS: assets, licensing
 
 ## User facts
 
@@ -16,6 +16,17 @@
 - Runtime assets contain the full KayKit Medieval Hexagon glTF tree, repeated texture files, a shader, and undefined.png.
 - credits/CREDITS.md currently credits only the Bevy icon.
 - Nova keeps editable/source packs under art, shipped runtime files under assets, hand-maintained asset attribution under credits, and generated Rust dependency notices via cargo-about.
+
+## Implementation notes
+
+- Verified KayKit Medieval Hexagon Pack 1.0 FREE from the owner's downloaded archive. The distributed `License.txt` identifies Kay Lousberg as creator and distributor and licenses the pack under CC0 1.0.
+- Recorded the archive name, acquisition date, creation date, source URL, and SHA-256 in `art/kaykit-medieval-hexagon/README.md`.
+- Classified the five loaded glTF models, their five buffers, and three colocated textures as runtime KayKit inputs. The shader and question-mark image are project-owned runtime inputs.
+- Moved all 442 unused KayKit glTF files to `art/kaykit-medieval-hexagon/gltf/`. The combined art and runtime trees are byte-identical to all 455 files in the archive's glTF tree. Duplicate FBX, Unity FBX, and OBJ formats were not added.
+- Kept the Bevy-derived application icons under `build/` as packaging inputs and documented their MIT license.
+- Added the exact distributed KayKit license to `credits/licenses/` and expanded `credits/CREDITS.md` as the attribution source of truth.
+- Added cargo-about configuration, a template, a Nix-provided cargo-about tool, and `scripts/gen-licenses.sh`. The generated dependency notice is ignored and created with the locked release feature set.
+- Added a CI license gate. Release and deployment workflows generate or download the notice before packaging credits. Native and web release builds now disable development defaults.
 
 ## Delivery
 
@@ -31,6 +42,16 @@
 - Run an asset-reference audit and launch the game through loading into Playing with no missing asset.
 - Run the license generator and fail on unknown or unapproved dependency licenses.
 - Inspect native and wasm release archives for credits and required license texts.
+
+## Verification results
+
+- The runtime asset audit found 15 files and resolved every glTF buffer and image URI.
+- The downloaded and shipped KayKit license files compare byte-for-byte.
+- cargo-about generated 7,840 lines of notices and rejected unapproved licenses during the initial default-feature probe.
+- The native release smoke run reached Playing with all assets loaded.
+- The staged native archive contained CREDITS, Bevy and KayKit asset licenses, and generated dependency notices, with no art tree.
+- The Trunk release contained 15 runtime assets and the four expected credits files, with no art tree. wasm-opt accepted the release module with the workflow feature flags.
+- Passed actionlint, cargo test with all features, clippy with warnings denied, rustfmt, the comment-policy gate, and diff validation.
 
 ## Done when
 
