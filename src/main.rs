@@ -7,12 +7,13 @@ use bevy::render::mesh::{Indices, PrimitiveTopology};
 #[cfg(feature = "debug")]
 use debug::*;
 
-use bevy::{asset::AssetMetaCheck, prelude::*, render::camera::ScalingMode, window::WindowMode};
+use bevy::{asset::AssetMetaCheck, camera::ScalingMode, prelude::*, window::WindowMode};
 use bevy_asset_loader::prelude::*;
+use bevy_rand::prelude::*;
 use bevy_tweening::lens::*;
 use bevy_tweening::*;
 use hexx::*;
-use rand::prelude::*;
+use rand_core::Rng;
 
 use game::materials::prelude::*;
 
@@ -21,6 +22,21 @@ const HIGHLIGHT_COLOR: Color = Color::srgb(0.0, 0.5, 0.0);
 
 const WORLD_HALF_RADIUS: u32 = 3;
 const HEX_UP_SCALE: f32 = 1.1;
+
+#[derive(Debug, Copy, Clone, PartialEq)]
+struct TransformPositionScaleLens {
+    start_translation: Vec3,
+    end_translation: Vec3,
+    start_scale: Vec3,
+    end_scale: Vec3,
+}
+
+impl Lens<Transform> for TransformPositionScaleLens {
+    fn lerp(&mut self, mut target: Mut<Transform>, ratio: f32) {
+        target.translation = self.start_translation.lerp(self.end_translation, ratio);
+        target.scale = self.start_scale.lerp(self.end_scale, ratio);
+    }
+}
 
 #[derive(Clone, Eq, PartialEq, Debug, Hash, Default, States)]
 enum GameStates {
@@ -74,7 +90,7 @@ enum HexTileKind {
 
 impl HexTileKind {
     fn random(rng: &mut impl Rng) -> Self {
-        match rng.random_range(0..4) {
+        match rng.next_u32() % 4 {
             0 => HexTileKind::Empty,
             1 => HexTileKind::Tree,
             2 => HexTileKind::Stone,
@@ -92,16 +108,13 @@ struct XPMax(u32);
 #[derive(Resource, Debug, Default, Deref, DerefMut)]
 struct SkillPoints(u32);
 
-#[derive(Resource, Deref, DerefMut)]
-struct HexMapRng(StdRng);
-
 #[derive(Resource, Default, Deref, DerefMut)]
 struct HexMapResource(HexLayout);
 
 #[derive(Component, Debug, Clone)]
 struct Selected;
 
-#[derive(Event)]
+#[derive(Message)]
 struct SelectedEvent<T: Component> {
     entity: Entity,
     _marker: std::marker::PhantomData<T>,
@@ -116,7 +129,7 @@ impl<T: Component> SelectedEvent<T> {
     }
 }
 
-#[derive(Event)]
+#[derive(Message)]
 struct DeselectedEvent<T: Component> {
     entity: Entity,
     _marker: std::marker::PhantomData<T>,
@@ -131,7 +144,7 @@ impl<T: Component> DeselectedEvent<T> {
     }
 }
 
-#[derive(Event)]
+#[derive(Message)]
 struct ClickedSelectedEvent<T: Component> {
     entity: Entity,
     _marker: std::marker::PhantomData<T>,
@@ -154,10 +167,8 @@ fn main() {
             .set(WindowPlugin {
                 primary_window: Some(Window {
                     title: "Clicker".to_string(),
-                    // Bind to canvas included in `index.html`
                     canvas: Some("#bevy".to_owned()),
                     fit_canvas_to_parent: true,
-                    // Tells wasm not to override default event handling, like F5 and Ctrl+R
                     prevent_default_event_handling: false,
                     mode: WindowMode::BorderlessFullscreen(MonitorSelection::Primary),
                     ..default()
@@ -176,14 +187,14 @@ fn main() {
 
     app.add_plugins(FadingMaterialPlugin);
     app.add_plugins(bevy_tweening::TweeningPlugin);
+    app.add_plugins(EntropyPlugin::<WyRand>::default());
 
-    app.add_event::<ClickedSelectedEvent<HexGhost>>();
-    app.add_event::<ClickedSelectedEvent<HexTile>>();
-    app.add_event::<SelectedEvent<HexTile>>();
-    app.add_event::<DeselectedEvent<HexTile>>();
+    app.add_message::<ClickedSelectedEvent<HexGhost>>();
+    app.add_message::<ClickedSelectedEvent<HexTile>>();
+    app.add_message::<SelectedEvent<HexTile>>();
+    app.add_message::<DeselectedEvent<HexTile>>();
 
     app.init_state::<GameStates>();
-    app.enable_state_scoped_entities::<GameStates>();
 
     app.add_loading_state(
         LoadingState::new(GameStates::AssetLoading)
@@ -195,7 +206,6 @@ fn main() {
     app.init_resource::<XPValue>();
     app.insert_resource(SkillPoints(1));
     app.insert_resource(XPMax(10));
-    app.insert_resource(HexMapRng(StdRng::from_os_rng()));
     app.insert_resource(HexMapResource(HexLayout {
         orientation: HexOrientation::Flat,
         scale: Vec2::splat(2.0 / 3.0f32.sqrt()),
@@ -230,7 +240,7 @@ fn setup_asset_loading(mut commands: Commands) {
     commands.spawn((
         Name::new("CameraUI"),
         Camera2d,
-        StateScoped(GameStates::AssetLoading),
+        DespawnOnExit(GameStates::AssetLoading),
     ));
 }
 
@@ -258,14 +268,14 @@ fn setup_playing(
             },
             ..OrthographicProjection::default_3d()
         }),
-        StateScoped(GameStates::Playing),
+        DespawnOnExit(GameStates::Playing),
     ));
 
     commands.spawn((
         Name::new("DirectionalLight"),
         DirectionalLight::default(),
         Transform::from_xyz(10.0, 15.0, -15.0).looking_at(Vec3::ZERO, Vec3::Y),
-        StateScoped(GameStates::Playing),
+        DespawnOnExit(GameStates::Playing),
     ));
 
     let coord = hexmap.hex_to_world_pos(Hex::ZERO);
@@ -279,7 +289,7 @@ fn setup_playing(
         HexCoord(hexmap.world_pos_to_hex(translation.xz())),
         Mesh3d(mesh_handle.clone()),
         MeshMaterial3d(material_handle.clone()),
-        StateScoped(GameStates::Playing),
+        DespawnOnExit(GameStates::Playing),
     ));
 
     commands
@@ -384,14 +394,17 @@ fn update_selected(
     q_hex: Query<(Entity, &HexCoord), Without<Selected>>,
     q_selected: Query<(Entity, &HexCoord), With<Selected>>,
     q_camera: Query<(&Camera, &GlobalTransform)>,
-    mut ev_selected: EventWriter<SelectedEvent<HexTile>>,
-    mut ev_deselected: EventWriter<DeselectedEvent<HexTile>>,
+    mut ev_selected: MessageWriter<SelectedEvent<HexTile>>,
+    mut ev_deselected: MessageWriter<DeselectedEvent<HexTile>>,
 ) {
-    let Ok((camera, camera_transform)) = q_camera.get_single() else {
+    let Ok((camera, camera_transform)) = q_camera.single() else {
         return;
     };
 
-    let Some(cursor_position) = windows.single().cursor_position() else {
+    let Ok(window) = windows.single() else {
+        return;
+    };
+    let Some(cursor_position) = window.cursor_position() else {
         return;
     };
 
@@ -408,10 +421,10 @@ fn update_selected(
 
     let cursor_coord = hexmap.world_pos_to_hex(position);
 
-    if let Ok((entity, hex_coord)) = q_selected.get_single() {
+    if let Ok((entity, hex_coord)) = q_selected.single() {
         if **hex_coord != cursor_coord {
             commands.entity(entity).remove::<Selected>();
-            ev_deselected.send(DeselectedEvent::new(entity));
+            ev_deselected.write(DeselectedEvent::new(entity));
         } else {
             return;
         }
@@ -422,13 +435,13 @@ fn update_selected(
         .find(|(_, HexCoord(hex_coord))| *hex_coord == cursor_coord)
     {
         commands.entity(entity).insert(Selected);
-        ev_selected.send(SelectedEvent::new(entity));
+        ev_selected.write(SelectedEvent::new(entity));
     }
 }
 
 fn selected_tile_tween(
     mut commands: Commands,
-    mut ev_selected: EventReader<SelectedEvent<HexTile>>,
+    mut ev_selected: MessageReader<SelectedEvent<HexTile>>,
 ) {
     for event in ev_selected.read() {
         let tween_scale = Tween::new(
@@ -440,15 +453,15 @@ fn selected_tile_tween(
             },
         );
 
-        let track = Tracks::new([tween_scale]);
-
-        commands.entity(event.entity).insert(Animator::new(track));
+        commands
+            .entity(event.entity)
+            .insert(TweenAnim::new(tween_scale));
     }
 }
 
 fn deselect_tile_tween(
     mut commands: Commands,
-    mut ev_deselected: EventReader<DeselectedEvent<HexTile>>,
+    mut ev_deselected: MessageReader<DeselectedEvent<HexTile>>,
 ) {
     for event in ev_deselected.read() {
         let tween_scale = Tween::new(
@@ -460,26 +473,26 @@ fn deselect_tile_tween(
             },
         );
 
-        let track = Tracks::new([tween_scale]);
-
-        commands.entity(event.entity).insert(Animator::new(track));
+        commands
+            .entity(event.entity)
+            .insert(TweenAnim::new(tween_scale));
     }
 }
 
 fn update_click_selected_hex<T: Component>(
     buttons: Res<ButtonInput<MouseButton>>,
     q_selected: Query<Entity, (With<Selected>, With<T>)>,
-    mut ev_clicked: EventWriter<ClickedSelectedEvent<T>>,
+    mut ev_clicked: MessageWriter<ClickedSelectedEvent<T>>,
 ) {
     if buttons.just_pressed(MouseButton::Left) {
-        if let Ok(entity) = q_selected.get_single() {
-            ev_clicked.send(ClickedSelectedEvent::new(entity));
+        if let Ok(entity) = q_selected.single() {
+            ev_clicked.write(ClickedSelectedEvent::new(entity));
         }
     }
 }
 
 fn clicked_tile_increase_xp(
-    mut ev_clicked: EventReader<ClickedSelectedEvent<HexTile>>,
+    mut ev_clicked: MessageReader<ClickedSelectedEvent<HexTile>>,
     mut xp_value: ResMut<XPValue>,
 ) {
     for _ in ev_clicked.read() {
@@ -489,7 +502,7 @@ fn clicked_tile_increase_xp(
 
 fn clicked_tile_tween(
     mut commands: Commands,
-    mut ev_clicked: EventReader<ClickedSelectedEvent<HexTile>>,
+    mut ev_clicked: MessageReader<ClickedSelectedEvent<HexTile>>,
 ) {
     for event in ev_clicked.read() {
         let tween_scale = Tween::new(
@@ -503,9 +516,9 @@ fn clicked_tile_tween(
         .with_repeat_count(RepeatCount::Finite(2))
         .with_repeat_strategy(RepeatStrategy::MirroredRepeat);
 
-        let track = Tracks::new([tween_scale]);
-
-        commands.entity(event.entity).insert(Animator::new(track));
+        commands
+            .entity(event.entity)
+            .insert(TweenAnim::new(tween_scale));
     }
 }
 
@@ -513,41 +526,32 @@ fn clicked_ghost_spawn(
     hexmap: Res<HexMapResource>,
     mut commands: Commands,
     mut skill_points: ResMut<SkillPoints>,
-    mut ev_clicked: EventReader<ClickedSelectedEvent<HexGhost>>,
+    mut ev_clicked: MessageReader<ClickedSelectedEvent<HexGhost>>,
     q_ghost: Query<(Entity, &HexCoord), With<HexGhost>>,
     q_tiles: Query<(Entity, &HexCoord), With<HexTile>>,
     game_assets: Res<GameAssets>,
     gltf_assets: Res<Assets<Gltf>>,
-    mut rng: ResMut<HexMapRng>,
+    mut rng: Single<&mut WyRand, With<GlobalRng>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<FadingMaterial>>,
 ) {
     for event in ev_clicked.read() {
         if let Ok((entity, hex_coord)) = q_ghost.get(event.entity) {
             if **skill_points > 0 {
-                commands.entity(entity).despawn_recursive();
+                commands.entity(entity).despawn();
 
                 let translation = hexmap.hex_to_world_pos(**hex_coord).extend(0.0).xzy();
 
-                let tween_move = Tween::new(
+                let tween_transform = Tween::new(
                     EaseFunction::QuadraticOut,
                     std::time::Duration::from_millis(500),
-                    TransformPositionLens {
-                        start: Vec3::new(0.0, -5.0, 0.0),
-                        end: Vec3::new(0.0, 0.0, 0.0),
+                    TransformPositionScaleLens {
+                        start_translation: Vec3::new(0.0, -5.0, 0.0),
+                        end_translation: Vec3::new(0.0, 0.0, 0.0),
+                        start_scale: Vec3::splat(0.5),
+                        end_scale: Vec3::ONE,
                     },
                 );
-
-                let tween_scale = Tween::new(
-                    EaseFunction::QuadraticOut,
-                    std::time::Duration::from_millis(500),
-                    TransformScaleLens {
-                        start: Vec3::new(0.5, 0.5, 0.5),
-                        end: Vec3::new(1.0, 1.0, 1.0),
-                    },
-                );
-
-                let track = Tracks::new([tween_move, tween_scale]);
 
                 commands
                     .spawn((
@@ -556,22 +560,23 @@ fn clicked_ghost_spawn(
                         Visibility::default(),
                         Transform::from_translation(translation),
                         HexCoord(**hex_coord),
-                        StateScoped(GameStates::Playing),
+                        DespawnOnExit(GameStates::Playing),
                     ))
                     .with_children(|parent| {
                         parent
                             .spawn((
                                 Name::new("HexTileRender"),
+                                Visibility::default(),
                                 Transform::from_xyz(0.0, -5.0, 0.0)
                                     .with_rotation(Quat::from_rotation_y(FRAC_PI_2)),
-                                Animator::new(track),
+                                TweenAnim::new(tween_transform),
                             ))
                             .with_children(|parent| {
                                 parent.spawn((
                                     Name::new("HexTileMesh"),
                                     Transform::from_xyz(0.0, 0.0, 0.0),
                                     GlobalTransform::default(),
-                                    SceneRoot(
+                                    WorldAssetRoot(
                                         gltf_assets.get(&game_assets.hex_base).unwrap().scenes[0]
                                             .clone(),
                                     ),
@@ -584,7 +589,7 @@ fn clicked_ghost_spawn(
                                             Name::new("HexTreeMesh"),
                                             Transform::from_xyz(0.0, 0.0, 0.0),
                                             GlobalTransform::default(),
-                                            SceneRoot(
+                                            WorldAssetRoot(
                                                 gltf_assets
                                                     .get(&game_assets.hex_tree)
                                                     .unwrap()
@@ -598,7 +603,7 @@ fn clicked_ghost_spawn(
                                             Name::new("HexStoneMesh"),
                                             Transform::from_xyz(0.0, 0.0, 0.0),
                                             GlobalTransform::default(),
-                                            SceneRoot(
+                                            WorldAssetRoot(
                                                 gltf_assets
                                                     .get(&game_assets.hex_stone)
                                                     .unwrap()
@@ -612,7 +617,7 @@ fn clicked_ghost_spawn(
                                             Name::new("HexDirtMesh"),
                                             Transform::from_xyz(0.0, 0.0, 0.0),
                                             GlobalTransform::default(),
-                                            SceneRoot(
+                                            WorldAssetRoot(
                                                 gltf_assets
                                                     .get(&game_assets.hex_dirt)
                                                     .unwrap()
@@ -624,7 +629,7 @@ fn clicked_ghost_spawn(
                                             Name::new("HexWheatMesh"),
                                             Transform::from_xyz(0.0, 0.0, 0.0),
                                             GlobalTransform::default(),
-                                            SceneRoot(
+                                            WorldAssetRoot(
                                                 gltf_assets
                                                     .get(&game_assets.hex_wheat)
                                                     .unwrap()
@@ -669,7 +674,7 @@ fn clicked_ghost_spawn(
                             HexCoord(hex_coord),
                             Mesh3d(mesh_handle.clone()),
                             MeshMaterial3d(material_handle.clone()),
-                            StateScoped(GameStates::Playing),
+                            DespawnOnExit(GameStates::Playing),
                         ));
                     });
 
@@ -696,7 +701,7 @@ fn update_xp_bar_fill(
     xp_max: Res<XPMax>,
     mut q_xp_bar_fill: Query<&mut Node, With<XPBarFill>>,
 ) {
-    if let Ok(mut xp_bar_fill) = q_xp_bar_fill.get_single_mut() {
+    if let Ok(mut xp_bar_fill) = q_xp_bar_fill.single_mut() {
         let xp_percent = **xp_value as f32 / **xp_max as f32;
         xp_bar_fill.width = Val::Percent(xp_percent * 100.0);
     }
@@ -706,7 +711,7 @@ fn update_skill_points_notification(
     skill_points: Res<SkillPoints>,
     mut q_skill_points_notification: Query<&mut Visibility, With<SkillPointsNotification>>,
 ) {
-    if let Ok(mut visibility) = q_skill_points_notification.get_single_mut() {
+    if let Ok(mut visibility) = q_skill_points_notification.single_mut() {
         if skill_points.0 > 0 {
             *visibility = Visibility::Visible;
         } else {
@@ -718,8 +723,6 @@ fn update_skill_points_notification(
 pub fn hexagonal_mesh(mesh_info: MeshInfo) -> Mesh {
     Mesh::new(
         PrimitiveTopology::TriangleList,
-        // Means you won't interact with the mesh on the CPU afterwards
-        // Check bevy docs for more information
         RenderAssetUsages::RENDER_WORLD,
     )
     .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, mesh_info.vertices)

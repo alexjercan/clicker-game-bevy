@@ -1,13 +1,9 @@
 #import bevy_pbr::forward_io::VertexOutput
 
-
-@group(2) @binding(0) var<uniform> color: vec4<f32>;
+@group(#{MATERIAL_BIND_GROUP}) @binding(0) var<uniform> color: vec4<f32>;
 
 @fragment
-fn fragment(
-    @location(0) local_pos: vec3<f32>
-) -> @location(0) vec4<f32> {
-    let alpha = smoothstep(-0.5, 0.5, local_pos.y);
-    let color = vec4<f32>(color.xyz, alpha);
-    return color;
+fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
+    let alpha = smoothstep(-0.5, 0.5, in.world_position.y);
+    return vec4<f32>(color.xyz, alpha);
 }
