@@ -1,6 +1,6 @@
 # Write the project README and changelog
 
-- STATUS: OPEN
+- STATUS: CLOSED
 - PRIORITY: 50
 - TAGS: docs,release
 
