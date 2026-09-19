@@ -1,0 +1,7 @@
+interface:
+  display_name: "Clicker Review"
+  short_description: "Review Clicker changes without editing them"
+  default_prompt: >-
+    Use $clicker-review to review this Clicker game change and report grounded findings.
+policy:
+  allow_implicit_invocation: false

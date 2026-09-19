@@ -1,0 +1,7 @@
+interface:
+  display_name: "Clicker Task"
+  short_description: "Track Clicker work as a Tatr delivery specification"
+  default_prompt: >-
+    Use $clicker-task to create or maintain a scoped Clicker game task.
+policy:
+  allow_implicit_invocation: true

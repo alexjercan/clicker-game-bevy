@@ -1,0 +1,7 @@
+interface:
+  display_name: "Clicker Runtime"
+  short_description: "Verify Bevy behavior and rendered game output"
+  default_prompt: >-
+    Use $clicker-runtime to select and run evidence for this Clicker game behavior.
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Clicker Assets"
+  short_description: "Manage game assets, source art, credits, and licenses"
+  default_prompt: >-
+    Use $clicker-assets to trace and safely change Clicker game assets or attribution.
+policy:
+  allow_implicit_invocation: true

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Clicker Implement"
+  short_description: "Deliver scoped Clicker game changes with focused proof"
+  default_prompt: >-
+    Use $clicker-implement to ground, deliver, and verify this Clicker game change.
+policy:
+  allow_implicit_invocation: true

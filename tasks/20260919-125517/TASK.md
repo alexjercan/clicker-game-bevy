@@ -1,8 +1,8 @@
 # Define Bevy project agent conventions and skills
 
-- STATUS: OPEN
+- STATUS: CLOSED
 - PRIORITY: 100
-- TAGS: foundation,agents
+- TAGS: foundation, agents
 
 ## User facts
 
@@ -35,3 +35,17 @@
 - A new agent can find the entry points, build and test commands, comment rules, and asset rules from AGENTS.md.
 - Skills are concise, project-specific, and contain no Nova-only path or command.
 - The docs explicitly reject adding a landing site or project web pages.
+
+## Completion
+
+Added root agent guidance, the Claude redirect, and five project skills for
+implementation, tasks, runtime evidence, assets, and review. The guidance keeps
+the wasm launcher distinct from a project website and defines the exact
+marked-comment policy.
+
+Validated all skill frontmatter, local links, metadata files, and the CLAUDE.md
+redirect with a local script. Confirmed the documented project paths, Tatr
+commands, and Nix-shell Cargo and Trunk executables exist. `git diff --check`
+passes. No game build was run because this change contains agent documentation
+only. A follow-up removed the volatile source-tree map and retained only the
+stable asset, art, credits, and task path ownership rules.
