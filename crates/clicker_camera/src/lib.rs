@@ -152,6 +152,54 @@ mod tests {
     }
 
     #[test]
+    fn plugin_applies_replaces_and_clears_camera_offset() {
+        let mut app = App::new();
+        app.insert_resource(Time::<()>::default())
+            .insert_resource(CameraShakeSettings {
+                decay_per_second: 0.0,
+                frequency_hz: 0.0,
+                ..default()
+            })
+            .add_plugins(ClickerCameraPlugin);
+        let camera = app
+            .world_mut()
+            .spawn((Transform::default(), ShakeCamera::default()))
+            .id();
+        app.world_mut()
+            .write_message(CameraImpulse { strength: 0.05 });
+
+        app.update();
+        let first_translation = app
+            .world()
+            .entity(camera)
+            .get::<Transform>()
+            .unwrap()
+            .translation;
+        assert_eq!(first_translation, Vec3::new(0.0, 0.05, 0.0));
+
+        app.update();
+        let second_translation = app
+            .world()
+            .entity(camera)
+            .get::<Transform>()
+            .unwrap()
+            .translation;
+        assert_eq!(second_translation, first_translation);
+
+        app.world_mut()
+            .resource_mut::<CameraShakeSettings>()
+            .enabled = false;
+        app.update();
+        let disabled_translation = app
+            .world()
+            .entity(camera)
+            .get::<Transform>()
+            .unwrap()
+            .translation;
+        assert_eq!(disabled_translation, Vec3::ZERO);
+    }
+
+    #[test]
     fn disabled_shake_ignores_impulses_and_clears_motion() {
         let settings = CameraShakeSettings {
             enabled: false,
