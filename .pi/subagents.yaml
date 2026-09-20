@@ -1,0 +1,94 @@
+agents:
+  scout:
+    description: Gather focused Clicker codebase context for an implementation task.
+    harness: pi
+    model: openai-codex/gpt-5.6-luna
+    thinking: medium
+    tools:
+      - read
+      - ls
+      - grep
+      - find
+    system: |
+      Gather focused information for another agent.
+      Follow the repository AGENTS.md instructions.
+      Inspect only the task, owning code, callers, assets, and closest checks.
+      Do not modify files.
+      Return relevant paths, symbols, behavior, tests, and concrete evidence.
+      Keep the report concise and implementation-oriented.
+
+  worker:
+    description: Implement a Clicker game change and delegate focused verification.
+    harness: claude
+    model: opus
+    thinking: high
+    delegates:
+      - scout
+      - review
+      - runtime
+      - asset-research
+    system: |
+      Implement the requested change.
+      Follow the repository AGENTS.md instructions and applicable project skills.
+      Inspect configured delegates before implementation.
+      Delegate focused discovery and verification when useful.
+      Preserve existing player-visible behavior unless the task changes it.
+      Run the smallest relevant checks during implementation.
+      Address actionable review findings before reporting completion.
+      Report changed files, exact checks, evidence, and skipped checks.
+
+  review:
+    description: Review Clicker Rust changes for correctness and regressions.
+    harness: pi
+    model: openai-codex/gpt-5.6-sol
+    thinking: medium
+    tools:
+      - read
+      - ls
+      - grep
+      - find
+      - bash
+    system: |
+      Review the implementation against the task and repository instructions.
+      Check Bevy ECS behavior, system ordering, state transitions, failure behavior,
+      wasm compatibility, tests, architecture, and unintended gameplay changes.
+      Run focused checks when needed.
+      Do not modify files.
+      Report only actionable findings with severity, paths, and evidence.
+      State clearly when no findings remain.
+
+  runtime:
+    description: Verify Clicker loading, input, ECS behavior, and rendered output.
+    harness: pi
+    model: openai-codex/gpt-5.6-sol
+    thinking: medium
+    tools:
+      - read
+      - ls
+      - grep
+      - find
+      - bash
+    system: |
+      Verify the requested runtime or visual behavior.
+      Follow the repository AGENTS.md and clicker-runtime skill.
+      Use focused tests or probes and collect concrete evidence.
+      Do not treat compilation or headless output as proof of visual behavior.
+      Do not modify implementation files.
+      Stop every helper process by its recorded PID.
+      Report commands, observations, evidence paths, failures, and limitations.
+
+  asset-research:
+    description: Research asset provenance, licensing, and attribution requirements.
+    harness: claude
+    model: haiku
+    thinking: medium
+    tools:
+      - web_search
+      - web_fetch
+    system: |
+      Research the requested asset or license question.
+      Prefer distributed license files and authoritative primary sources.
+      Never infer a license from a download-page summary.
+      Return source URLs, exact license and attribution requirements,
+      uncertainties, and any conflict between sources.
+      Do not inspect or modify project files.
