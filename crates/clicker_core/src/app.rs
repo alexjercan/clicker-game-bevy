@@ -12,7 +12,7 @@ use clicker_state::GameState;
 use clicker_ui::ClickerUiPlugin;
 
 use crate::{
-    glue::{HeadlessTileGluePlugin, RenderedTileGluePlugin},
+    glue::{HeadlessGluePlugin, RenderedGluePlugin},
     scene::MainScenePlugin,
 };
 
@@ -99,7 +99,7 @@ fn rendered_app() -> App {
         ClickerCameraPlugin,
         MainScenePlugin,
         ClickerGameplayPlugin,
-        RenderedTileGluePlugin,
+        RenderedGluePlugin,
         ClickerUiPlugin,
     ));
 
@@ -113,7 +113,7 @@ pub fn headless_app() -> App {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, StatesPlugin, log_plugin()));
     app.init_state::<GameState>()
-        .add_plugins((ClickerGameplayPlugin, HeadlessTileGluePlugin))
+        .add_plugins((ClickerGameplayPlugin, HeadlessGluePlugin))
         .add_systems(Startup, enter_playing);
     app
 }
