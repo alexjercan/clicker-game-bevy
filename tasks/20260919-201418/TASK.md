@@ -28,6 +28,8 @@
 - Generate audio assets with the Nix-provided Python, NumPy, and SciPy environment.
 - Use one click cue for each tile kind, one shared select/deselect cue, one ghost
   placement cue, and one level-up cue.
+- Keep the frequently repeated select/deselect cue low-pitched and quieter than
+  action cues.
 
 ## Decisions needed
 

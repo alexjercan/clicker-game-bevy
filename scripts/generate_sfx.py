@@ -139,7 +139,7 @@ def generate():
         0.52,
     )
     write("click_wheat.wav", grass_break(0.13), 0.26)
-    write("select.wav", tone(320.0, 0.055, 0.018, ((2.0, 0.12),)), 0.30)
+    write("select.wav", tone(185.0, 0.05, 0.016, ((2.0, 0.08),)), 0.16)
     write("place.wav", placement_sound(), 0.58)
     write("level_up.wav", sequence([523.25, 659.25, 880.00], 0.06, 0.008), 0.52)
     write(
