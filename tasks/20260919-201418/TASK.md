@@ -32,6 +32,8 @@
   action cues.
 - Drop a sound cue that Bevy cannot start, because Bevy skips its audio playback
   systems when the machine has no audio output stream.
+- Keep gameplay-to-render adaptation in core glue and move mesh, scene, and tile
+  decoration construction into a dedicated `clicker_render` subsystem.
 
 ## Decisions needed
 
