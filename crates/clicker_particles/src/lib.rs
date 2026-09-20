@@ -349,13 +349,15 @@ fn cleanup_finished_effects(
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use super::*;
 
-    #[test]
-    fn disabled_particles_consume_bursts_without_spawning_effects() {
+    fn particle_app(enabled: bool) -> App {
         let mut app = App::new();
         app.add_message::<ParticleBurst>()
-            .insert_resource(ParticleSettings { enabled: false })
+            .init_resource::<Time>()
+            .insert_resource(ParticleSettings { enabled })
             .insert_resource(ParticleEffects {
                 grass_click: default(),
                 leaves_click: default(),
@@ -364,7 +366,25 @@ mod tests {
                 tile_spawn_ring: default(),
                 tile_spawn_rise: default(),
             })
-            .add_systems(Update, spawn_bursts);
+            .add_systems(Update, (spawn_bursts, cleanup_finished_effects).chain());
+        app
+    }
+
+    fn effect_names(app: &mut App) -> Vec<String> {
+        let mut effects = app
+            .world_mut()
+            .query_filtered::<&Name, With<ParticleEffect>>();
+        let mut names = effects
+            .iter(app.world())
+            .map(|name| name.as_str().to_owned())
+            .collect::<Vec<_>>();
+        names.sort();
+        names
+    }
+
+    #[test]
+    fn disabled_particles_consume_bursts_without_spawning_effects() {
+        let mut app = particle_app(false);
         app.world_mut().write_message(ParticleBurst {
             kind: ParticleBurstKind::TileClick(ParticlePalette::Stone),
             position: Vec3::ZERO,
@@ -372,7 +392,63 @@ mod tests {
 
         app.update();
 
-        let mut effects = app.world_mut().query::<&ParticleEffect>();
-        assert_eq!(effects.iter(app.world()).count(), 0);
+        assert!(effect_names(&mut app).is_empty());
+    }
+
+    #[test]
+    fn enabled_bursts_spawn_one_click_effect_and_two_placement_effects() {
+        let mut app = particle_app(true);
+        app.world_mut().write_message(ParticleBurst {
+            kind: ParticleBurstKind::TileClick(ParticlePalette::Leaves),
+            position: Vec3::new(1.0, 2.0, 3.0),
+        });
+
+        app.update();
+
+        assert_eq!(effect_names(&mut app), vec!["Particles_TileClick"]);
+
+        app.world_mut().write_message(ParticleBurst {
+            kind: ParticleBurstKind::TileSpawn,
+            position: Vec3::new(4.0, 5.0, 6.0),
+        });
+        app.update();
+
+        assert_eq!(
+            effect_names(&mut app),
+            vec![
+                "Particles_TileClick",
+                "Particles_TileSpawnRing",
+                "Particles_TileSpawnRise",
+            ]
+        );
+    }
+
+    #[test]
+    fn one_shot_effects_are_cleaned_up_at_their_lifetimes() {
+        let mut app = particle_app(true);
+        app.world_mut().write_message(ParticleBurst {
+            kind: ParticleBurstKind::TileSpawn,
+            position: Vec3::ZERO,
+        });
+        app.update();
+        assert_eq!(effect_names(&mut app).len(), 2);
+
+        app.world_mut()
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(690));
+        app.update();
+        assert_eq!(effect_names(&mut app).len(), 2);
+
+        app.world_mut()
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(20));
+        app.update();
+        assert_eq!(effect_names(&mut app), vec!["Particles_TileSpawnRise"]);
+
+        app.world_mut()
+            .resource_mut::<Time>()
+            .advance_by(Duration::from_millis(200));
+        app.update();
+        assert!(effect_names(&mut app).is_empty());
     }
 }
