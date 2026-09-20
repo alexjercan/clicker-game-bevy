@@ -30,6 +30,9 @@ pub enum AudioSystems {
     Playback,
 }
 
+#[derive(Component)]
+struct SfxPlayer;
+
 pub struct ClickerAudioPlugin;
 
 impl Plugin for ClickerAudioPlugin {
@@ -41,7 +44,8 @@ impl Plugin for ClickerAudioPlugin {
                 play_sfx
                     .in_set(AudioSystems::Playback)
                     .run_if(resource_exists::<SfxAssets>),
-            );
+            )
+            .add_systems(Last, despawn_unplayed_sfx);
     }
 }
 
@@ -66,9 +70,22 @@ fn play_sfx(
         };
         commands.spawn((
             Name::new(name),
+            SfxPlayer,
             AudioPlayer::new(source.clone()),
             PlaybackSettings::DESPAWN.with_volume(Volume::Linear(settings.volume)),
         ));
+    }
+}
+
+// NOTE: Bevy skips its audio playback systems without an output stream, so a cue
+// NOTE: never gets an `AudioSink` and `PlaybackSettings::DESPAWN` never removes it.
+// NOTE: Bevy inserts the sink in `PostUpdate`, so a cue without one here cannot play.
+fn despawn_unplayed_sfx(
+    mut commands: Commands,
+    unplayed: Query<Entity, (With<SfxPlayer>, Without<AudioSink>)>,
+) {
+    for entity in &unplayed {
+        commands.entity(entity).despawn();
     }
 }
 
@@ -98,15 +115,7 @@ mod tests {
                 enabled: false,
                 ..default()
             })
-            .insert_resource(SfxAssets {
-                click_empty: default(),
-                click_tree: default(),
-                click_stone: default(),
-                click_wheat: default(),
-                select: default(),
-                place: default(),
-                level_up: default(),
-            })
+            .insert_resource(loaded_sfx_assets())
             .add_systems(Update, play_sfx);
         app.world_mut().write_message(SfxCue::LevelUp);
 
@@ -114,5 +123,66 @@ mod tests {
 
         let mut players = app.world_mut().query::<&AudioPlayer>();
         assert_eq!(players.iter(app.world()).count(), 0);
+    }
+
+    #[test]
+    fn cues_without_audio_output_do_not_leak_players() {
+        let mut app = App::new();
+        app.add_plugins(ClickerAudioPlugin)
+            .insert_resource(loaded_sfx_assets())
+            .init_resource::<ObservedPlayers>()
+            .add_systems(PostUpdate, observe_players);
+
+        for _ in 0..4 {
+            app.world_mut().write_message(SfxCue::LevelUp);
+            app.update();
+        }
+
+        assert_eq!(app.world().resource::<ObservedPlayers>().0, 1);
+        let mut players = app.world_mut().query::<&AudioPlayer>();
+        assert_eq!(players.iter(app.world()).count(), 0);
+    }
+
+    #[test]
+    fn playing_sfx_players_stay_until_bevy_despawns_them() {
+        let mut app = App::new();
+        app.add_plugins(ClickerAudioPlugin)
+            .insert_resource(loaded_sfx_assets());
+        let (player, _output) = rodio::Player::new();
+        let entity = app
+            .world_mut()
+            .spawn((
+                SfxPlayer,
+                AudioPlayer::new(Handle::<AudioSource>::default()),
+                PlaybackSettings::DESPAWN,
+                AudioSink::new(player),
+            ))
+            .id();
+
+        app.update();
+
+        assert!(app.world().get_entity(entity).is_ok());
+    }
+
+    #[derive(Resource, Default)]
+    struct ObservedPlayers(usize);
+
+    fn observe_players(
+        players: Query<(), With<AudioPlayer>>,
+        mut observed: ResMut<ObservedPlayers>,
+    ) {
+        observed.0 = observed.0.max(players.iter().count());
+    }
+
+    fn loaded_sfx_assets() -> SfxAssets {
+        SfxAssets {
+            click_empty: default(),
+            click_tree: default(),
+            click_stone: default(),
+            click_wheat: default(),
+            select: default(),
+            place: default(),
+            level_up: default(),
+        }
     }
 }

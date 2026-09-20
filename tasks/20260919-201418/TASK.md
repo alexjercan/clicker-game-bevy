@@ -30,6 +30,8 @@
   placement cue, and one level-up cue.
 - Keep the frequently repeated select/deselect cue low-pitched and quieter than
   action cues.
+- Drop a sound cue that Bevy cannot start, because Bevy skips its audio playback
+  systems when the machine has no audio output stream.
 
 ## Decisions needed
 

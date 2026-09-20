@@ -9,3 +9,6 @@ publish = false
 bevy.workspace = true
 clicker_assets = { path = "../clicker_assets" }
 clicker_tile = { path = "../clicker_tile" }
+
+[dev-dependencies]
+rodio = { version = "0.22.2", default-features = false }
