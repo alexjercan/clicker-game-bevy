@@ -76,25 +76,43 @@ fn pointer_world_position(
     Some(ray.get_point(distance).xz())
 }
 
-fn animate_selected_tiles(mut commands: Commands, mut events: MessageReader<TileSelected>) {
+fn animate_selected_tiles(
+    mut commands: Commands,
+    entities: Query<()>,
+    mut events: MessageReader<TileSelected>,
+) {
     for event in events.read() {
-        commands
-            .entity(event.entity)
-            .insert(tile_select_animation());
+        if entities.contains(event.entity) {
+            commands
+                .entity(event.entity)
+                .insert(tile_select_animation());
+        }
     }
 }
 
-fn animate_deselected_tiles(mut commands: Commands, mut events: MessageReader<TileDeselected>) {
+fn animate_deselected_tiles(
+    mut commands: Commands,
+    entities: Query<()>,
+    mut events: MessageReader<TileDeselected>,
+) {
     for event in events.read() {
-        commands
-            .entity(event.entity)
-            .insert(tile_deselect_animation());
+        if entities.contains(event.entity) {
+            commands
+                .entity(event.entity)
+                .insert(tile_deselect_animation());
+        }
     }
 }
 
-fn animate_clicked_tiles(mut commands: Commands, mut events: MessageReader<TileClicked>) {
+fn animate_clicked_tiles(
+    mut commands: Commands,
+    entities: Query<()>,
+    mut events: MessageReader<TileClicked>,
+) {
     for event in events.read() {
-        commands.entity(event.entity).insert(tile_click_animation());
+        if entities.contains(event.entity) {
+            commands.entity(event.entity).insert(tile_click_animation());
+        }
     }
 }
 
@@ -157,5 +175,42 @@ fn prepare_rendered_tiles(
         commands
             .entity(event.render_entity)
             .insert((SpawnedTile(coord.tile_coord()), tile_spawn_animation()));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn animation_feedback_ignores_entities_despawned_before_feedback() {
+        let mut app = App::new();
+        app.add_message::<TileSelected>()
+            .add_message::<TileDeselected>()
+            .add_message::<TileClicked>()
+            .add_systems(
+                Update,
+                (
+                    animate_selected_tiles,
+                    animate_deselected_tiles,
+                    animate_clicked_tiles,
+                ),
+            );
+        let entity = app.world_mut().spawn(Transform::default()).id();
+        app.world_mut().entity_mut(entity).despawn();
+        app.world_mut().write_message(TileSelected {
+            entity,
+            coord: clicker_tile::TileCoord::ZERO,
+        });
+        app.world_mut().write_message(TileDeselected {
+            entity,
+            coord: clicker_tile::TileCoord::ZERO,
+        });
+        app.world_mut().write_message(TileClicked {
+            entity,
+            coord: clicker_tile::TileCoord::ZERO,
+        });
+
+        app.update();
     }
 }
