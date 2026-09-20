@@ -22,6 +22,8 @@
 - Start with subtle camera shake when an existing tile click resolves.
 - Use a bounded additive impulse that decays and does not change gameplay state.
 - Provide an enabled setting so camera shake can be disabled independently.
+- Isolate shake on a dedicated camera child transform. The parent rig owns the
+  camera pose, so other camera systems cannot be corrupted by shake.
 - Use `bevy_hanabi` for the later particle work.
 - Generate the later audio assets with the Nix-provided Python, NumPy, and SciPy environment.
 
