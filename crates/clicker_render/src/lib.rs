@@ -58,10 +58,15 @@ impl Plugin for ClickerRenderPlugin {
 fn render_ghosts(
     mut commands: Commands,
     mut requests: MessageReader<RenderGhost>,
+    targets: Query<()>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<FadingMaterial>>,
 ) {
     for request in requests.read() {
+        if !targets.contains(request.entity) {
+            continue;
+        }
+
         let mesh = ColumnMeshBuilder::new(&request.layout, 1.0)
             .with_subdivisions(10)
             .with_offset(Vec3::NEG_Y * request.depth)
@@ -78,11 +83,16 @@ fn render_ghosts(
 fn render_tiles(
     mut commands: Commands,
     mut requests: MessageReader<RenderTile>,
+    targets: Query<()>,
     game_assets: Res<GameAssets>,
     gltf_assets: Res<Assets<Gltf>>,
     mut rendered: MessageWriter<TileRendered>,
 ) {
     for request in requests.read() {
+        if !targets.contains(request.entity) {
+            continue;
+        }
+
         commands.entity(request.entity).insert((
             Visibility::default(),
             Transform::from_translation(request.translation),
@@ -222,5 +232,41 @@ mod tests {
             .any(|name| name.as_str() == "HexTileRender"));
         let mut scenes = app.world_mut().query::<&WorldAssetRoot>();
         assert_eq!(scenes.iter(app.world()).count(), 0);
+    }
+
+    #[test]
+    fn stale_tile_requests_do_not_create_render_data() {
+        let mut app = test_app();
+        let entity = app.world_mut().spawn_empty().id();
+        app.world_mut().entity_mut(entity).despawn();
+        app.world_mut().write_message(RenderTile {
+            entity,
+            translation: Vec3::ZERO,
+            kind: TileKind::Tree,
+        });
+
+        app.update();
+
+        let mut names = app.world_mut().query::<&Name>();
+        assert_eq!(names.iter(app.world()).count(), 0);
+        assert!(app.world().resource::<Messages<TileRendered>>().is_empty());
+    }
+
+    #[test]
+    fn stale_ghost_requests_do_not_create_render_data() {
+        let mut app = test_app();
+        let entity = app.world_mut().spawn_empty().id();
+        app.world_mut().entity_mut(entity).despawn();
+        app.world_mut().write_message(RenderGhost {
+            entity,
+            layout: HexLayout::default(),
+            translation: Vec3::ZERO,
+            depth: 0.5,
+        });
+
+        app.update();
+
+        assert!(app.world().resource::<Assets<Mesh>>().is_empty());
+        assert!(app.world().resource::<Assets<FadingMaterial>>().is_empty());
     }
 }
