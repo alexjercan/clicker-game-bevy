@@ -22,6 +22,9 @@ impl Default for XpMax {
 #[derive(Resource, Debug, Deref, DerefMut)]
 pub struct SkillPoints(pub u32);
 
+#[derive(Message, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct LevelUp;
+
 impl Default for SkillPoints {
     fn default() -> Self {
         Self(INITIAL_SKILL_POINTS)
@@ -35,6 +38,7 @@ impl Plugin for ProgressionPlugin {
         app.init_resource::<XpValue>()
             .init_resource::<XpMax>()
             .init_resource::<SkillPoints>()
+            .add_message::<LevelUp>()
             .add_systems(
                 Update,
                 (earn_xp, spend_skill_point).in_set(GameplaySystems::Progression),
@@ -47,13 +51,16 @@ fn earn_xp(
     mut xp_value: ResMut<XpValue>,
     mut xp_max: ResMut<XpMax>,
     mut skill_points: ResMut<SkillPoints>,
+    mut level_ups: MessageWriter<LevelUp>,
 ) {
     let earned = events.read().count() as u32;
     if earned == 0 {
         return;
     }
     xp_value.0 += earned;
-    apply_level_up(&mut xp_value.0, &mut xp_max.0, &mut skill_points.0);
+    if apply_level_up(&mut xp_value.0, &mut xp_max.0, &mut skill_points.0) {
+        level_ups.write(LevelUp);
+    }
 }
 
 fn spend_skill_point(
@@ -70,12 +77,14 @@ fn spend_skill_point(
     }
 }
 
-fn apply_level_up(xp_value: &mut u32, xp_max: &mut u32, skill_points: &mut u32) {
-    if *xp_value >= *xp_max {
-        *xp_value -= *xp_max;
-        *skill_points += 1;
-        *xp_max += XP_MAX_INCREMENT;
+fn apply_level_up(xp_value: &mut u32, xp_max: &mut u32, skill_points: &mut u32) -> bool {
+    if *xp_value < *xp_max {
+        return false;
     }
+    *xp_value -= *xp_max;
+    *skill_points += 1;
+    *xp_max += XP_MAX_INCREMENT;
+    true
 }
 
 #[cfg(test)]
@@ -94,7 +103,7 @@ mod tests {
         let mut xp = 9;
         let mut max = 10;
         let mut points = 0;
-        apply_level_up(&mut xp, &mut max, &mut points);
+        assert!(!apply_level_up(&mut xp, &mut max, &mut points));
         assert_eq!((xp, max, points), (9, 10, 0));
     }
 
@@ -103,7 +112,7 @@ mod tests {
         let mut xp = 10;
         let mut max = 10;
         let mut points = 0;
-        apply_level_up(&mut xp, &mut max, &mut points);
+        assert!(apply_level_up(&mut xp, &mut max, &mut points));
         assert_eq!((xp, max, points), (0, 20, 1));
     }
 }

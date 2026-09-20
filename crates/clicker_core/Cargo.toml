@@ -20,6 +20,7 @@ dev = [
 bevy.workspace = true
 clicker_animation = { path = "../clicker_animation" }
 clicker_assets = { path = "../clicker_assets" }
+clicker_audio = { path = "../clicker_audio" }
 clicker_camera = { path = "../clicker_camera" }
 clicker_debug = { path = "../clicker_debug", optional = true }
 clicker_gameplay = { path = "../clicker_gameplay" }

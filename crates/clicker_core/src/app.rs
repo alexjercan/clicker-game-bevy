@@ -5,6 +5,7 @@ use bevy::{
 };
 use clicker_animation::ClickerAnimationPlugin;
 use clicker_assets::ClickerAssetsPlugin;
+use clicker_audio::ClickerAudioPlugin;
 use clicker_camera::ClickerCameraPlugin;
 use clicker_gameplay::ClickerGameplayPlugin;
 use clicker_state::GameState;
@@ -94,6 +95,7 @@ fn rendered_app() -> App {
     .add_plugins((
         ClickerAnimationPlugin,
         ClickerAssetsPlugin,
+        ClickerAudioPlugin,
         ClickerCameraPlugin,
         MainScenePlugin,
         ClickerGameplayPlugin,

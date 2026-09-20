@@ -25,11 +25,13 @@
 - Isolate shake on a dedicated camera child transform. The parent rig owns the
   camera pose, so other camera systems cannot be corrupted by shake.
 - Use `bevy_hanabi` for the later particle work.
-- Generate the later audio assets with the Nix-provided Python, NumPy, and SciPy environment.
+- Generate audio assets with the Nix-provided Python, NumPy, and SciPy environment.
+- Use one click cue for each tile kind, one shared select/deselect cue, one ghost
+  placement cue, and one level-up cue.
 
 ## Decisions needed
 
-- Approve an effect language, intensity range, color palette, and audio direction beyond the initial camera shake.
+- Approve an effect language, intensity range, and color palette beyond the initial camera shake and generated sound set.
 - Decide reduced-motion, mute, volume, and how camera-shake controls appear in the UI.
 - Identify and license any external sound or visual assets before adding them to runtime assets.
 

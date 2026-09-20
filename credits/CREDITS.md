@@ -12,6 +12,8 @@ The game's code and project-owned assets are covered by the top-level
 - The skill-point question-mark image (`assets/undefined.png`) is original to
   the project.
 - The fading shader (`assets/shaders/fading.wgsl`) is original to the project.
+- The sound effects under `assets/audio/` are generated project assets. Their
+  generator is `scripts/generate_sfx.py`.
 
 ## Third-party assets
 
