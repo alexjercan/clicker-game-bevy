@@ -14,7 +14,7 @@ env:
 
 jobs:
   quality:
-    name: fmt / comments / clippy / test
+    name: fmt / comments / clippy
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
@@ -36,6 +36,24 @@ jobs:
         run: cargo test --locked --test comment_policy
       - name: Clippy
         run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            libasound2-dev libudev-dev libwayland-dev libxkbcommon-dev
+      - name: Resolve pinned Rust toolchain
+        run: rustup show active-toolchain
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+          shared-key: tests
       - name: Tests
         run: cargo test --locked --workspace --all-features
 
