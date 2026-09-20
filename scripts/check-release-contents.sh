@@ -16,6 +16,7 @@ case "$mode" in
         ;;
     web)
         test -f "$root/index.html"
+        grep -q "WebGPU required" "$root/index.html"
         find "$root" -maxdepth 1 -type f -name '*.wasm' -print -quit | grep -q .
         ;;
     *)

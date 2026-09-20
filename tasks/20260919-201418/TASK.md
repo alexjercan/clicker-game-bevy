@@ -37,6 +37,9 @@
 - Give each tile kind a distinct burst at the pointer impact. Pair tile
   placement with a broad gold outward ring and upward pop, with no separate
   ghost-click burst.
+- Run the WebAssembly build on the WebGPU render backend, because Hanabi
+  particles need compute shaders. Browsers without WebGPU, such as Firefox on
+  Linux, get a launcher message instead of a dead canvas and are not supported.
 
 ## Decisions needed
 
@@ -62,6 +65,8 @@
 - Record rendered before/after evidence for every visual effect and listen to every SFX flow.
 - Verify reduced-motion, shake-off, mute, and no-render paths.
 - Run formatting, tests, clippy, native release, and Trunk release checks.
+- Confirm `cargo tree` reports the `webgpu` feature on the wasm target only, and
+  that the shipped launcher carries the WebGPU gate.
 
 ## Done when
 

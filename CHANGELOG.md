@@ -22,3 +22,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Made root default features empty. The `debug` feature now controls in-game debug presentation, while `dev` enables development and probe tooling.
 - Replaced custom debug performance text with Bevy's FPS overlay and a unified `F11` toggle.
 - Updated native and WebAssembly packaging to include runtime assets and credits.
+- Moved the WebAssembly build from WebGL2 to the WebGPU render backend, which the particle effects require. The launcher now reports the missing backend on browsers without WebGPU.
