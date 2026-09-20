@@ -1,5 +1,6 @@
 mod audio;
 mod camera;
+mod particles;
 mod render;
 mod tile;
 
@@ -14,6 +15,7 @@ impl Plugin for RenderedGluePlugin {
             render::RenderGluePlugin,
             audio::AudioGluePlugin,
             camera::CameraGluePlugin,
+            particles::ParticleGluePlugin,
         ));
     }
 }

@@ -34,6 +34,9 @@
   systems when the machine has no audio output stream.
 - Keep gameplay-to-render adaptation in core glue and move mesh, scene, and tile
   decoration construction into a dedicated `clicker_render` subsystem.
+- Give each tile kind a distinct burst at the pointer impact. Pair tile
+  placement with a broad gold outward ring and upward pop, with no separate
+  ghost-click burst.
 
 ## Decisions needed
 
