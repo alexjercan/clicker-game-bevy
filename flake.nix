@@ -120,6 +120,7 @@
             llvmPackages.bintools
             trunk
             wasm-pack
+            (python3.withPackages (ps: with ps; [numpy scipy]))
           ];
           buildInputs = gameLibs;
           LD_LIBRARY_PATH = lib.makeLibraryPath gameLibs;

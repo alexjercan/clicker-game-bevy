@@ -17,12 +17,18 @@
 - The project has no particle owner, audio feedback policy, camera impulse API, effect intensity settings, or reduced-motion behavior.
 - Effects must not own gameplay outcomes or change deterministic simulation state.
 
+## Decisions
+
+- Start with subtle camera shake when an existing tile click resolves.
+- Use a bounded additive impulse that decays and does not change gameplay state.
+- Provide an enabled setting so camera shake can be disabled independently.
+- Use `bevy_hanabi` for the later particle work.
+- Generate the later audio assets with the Nix-provided Python, NumPy, and SciPy environment.
+
 ## Decisions needed
 
-- Choose the first actions that need feedback: tile click, resource gain, level-up, purchase, placement, or world unlock.
-- Approve an effect language, intensity range, color palette, and audio direction.
-- Decide reduced-motion, mute, volume, and camera-shake controls.
-- Decide whether particles use Bevy entities, a maintained particle dependency, or a small purpose-built pool after profiling wasm.
+- Approve an effect language, intensity range, color palette, and audio direction beyond the initial camera shake.
+- Decide reduced-motion, mute, volume, and how camera-shake controls appear in the UI.
 - Identify and license any external sound or visual assets before adding them to runtime assets.
 
 ## Delivery
