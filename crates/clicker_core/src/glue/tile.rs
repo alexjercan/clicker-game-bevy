@@ -8,9 +8,6 @@ use clicker_animation::{
     AnimationsEnabled, SpawnAnimationFinished,
 };
 use clicker_assets::{FadingMaterial, GameAssets, BACKGROUND_DARK_COLOR};
-use clicker_audio::{AudioSystems, SfxCue};
-use clicker_camera::{CameraFeedbackSystems, CameraImpulse, CameraShakeSettings};
-use clicker_gameplay::LevelUp;
 use clicker_state::GameState;
 use clicker_tile::{
     HexCoord, HexGhost, HexMap, HexTile, InitializeTileWorld, TileClicked, TileDeselected,
@@ -39,23 +36,6 @@ impl Plugin for RenderedTileGluePlugin {
                 Update,
                 (render_added_ghosts, render_added_tiles)
                     .after(TileSystems::Mutation)
-                    .run_if(in_state(GameState::Playing)),
-            )
-            .configure_sets(
-                Update,
-                CameraFeedbackSystems::Impulse.after(TileSystems::Feedback),
-            )
-            .configure_sets(Update, AudioSystems::Playback.after(TileSystems::Feedback))
-            .add_systems(
-                Update,
-                (
-                    request_camera_impulses,
-                    request_click_sfx,
-                    request_selection_sfx,
-                    request_placement_sfx,
-                    request_level_up_sfx,
-                )
-                    .in_set(TileSystems::Feedback)
                     .run_if(in_state(GameState::Playing)),
             );
         if app.world().contains_resource::<AnimationsEnabled>() {
@@ -137,54 +117,6 @@ fn animate_deselected_tiles(mut commands: Commands, mut events: MessageReader<Ti
 fn animate_clicked_tiles(mut commands: Commands, mut events: MessageReader<TileClicked>) {
     for event in events.read() {
         commands.entity(event.entity).insert(tile_click_animation());
-    }
-}
-
-fn request_camera_impulses(
-    settings: Res<CameraShakeSettings>,
-    mut clicks: MessageReader<TileClicked>,
-    mut impulses: MessageWriter<CameraImpulse>,
-) {
-    for _ in clicks.read() {
-        impulses.write(CameraImpulse {
-            strength: settings.click_impulse,
-        });
-    }
-}
-
-fn request_click_sfx(
-    mut clicks: MessageReader<TileClicked>,
-    kinds: Query<&TileKind>,
-    mut cues: MessageWriter<SfxCue>,
-) {
-    for click in clicks.read() {
-        if let Ok(kind) = kinds.get(click.entity) {
-            cues.write(SfxCue::TileClick(*kind));
-        }
-    }
-}
-
-fn request_selection_sfx(
-    mut selected: MessageReader<TileSelected>,
-    mut deselected: MessageReader<TileDeselected>,
-    mut cues: MessageWriter<SfxCue>,
-) {
-    let selected_changed = selected.read().count() > 0;
-    let deselected_changed = deselected.read().count() > 0;
-    if selected_changed || deselected_changed {
-        cues.write(SfxCue::Selection);
-    }
-}
-
-fn request_placement_sfx(mut placed: MessageReader<TilePlaced>, mut cues: MessageWriter<SfxCue>) {
-    for _ in placed.read() {
-        cues.write(SfxCue::Placement);
-    }
-}
-
-fn request_level_up_sfx(mut level_ups: MessageReader<LevelUp>, mut cues: MessageWriter<SfxCue>) {
-    for _ in level_ups.read() {
-        cues.write(SfxCue::LevelUp);
     }
 }
 
@@ -317,90 +249,4 @@ fn hexagonal_mesh(mesh_info: MeshInfo) -> Mesh {
     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, mesh_info.normals)
     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, mesh_info.uvs)
     .with_inserted_indices(Indices::U16(mesh_info.indices))
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use clicker_tile::TileCoord;
-
-    #[derive(Resource, Default)]
-    struct CollectedCues(Vec<SfxCue>);
-
-    fn collect_cues(mut cues: MessageReader<SfxCue>, mut collected: ResMut<CollectedCues>) {
-        collected.0.extend(cues.read());
-    }
-
-    #[test]
-    fn tile_click_requests_the_cue_for_its_kind() {
-        let mut app = App::new();
-        app.add_message::<TileClicked>()
-            .add_message::<SfxCue>()
-            .init_resource::<CollectedCues>()
-            .add_systems(Update, (request_click_sfx, collect_cues).chain());
-        let entity = app.world_mut().spawn(TileKind::Stone).id();
-        app.world_mut().write_message(TileClicked {
-            entity,
-            coord: TileCoord::ZERO,
-        });
-
-        app.update();
-
-        assert_eq!(
-            app.world().resource::<CollectedCues>().0,
-            vec![SfxCue::TileClick(TileKind::Stone)]
-        );
-    }
-
-    #[test]
-    fn placement_and_level_up_request_distinct_cues() {
-        let mut app = App::new();
-        app.add_message::<TilePlaced>()
-            .add_message::<LevelUp>()
-            .add_message::<SfxCue>()
-            .init_resource::<CollectedCues>()
-            .add_systems(
-                Update,
-                (request_placement_sfx, request_level_up_sfx, collect_cues).chain(),
-            );
-        app.world_mut().write_message(TilePlaced {
-            coord: TileCoord::ZERO,
-            kind: TileKind::Tree,
-        });
-        app.world_mut().write_message(LevelUp);
-
-        app.update();
-
-        assert_eq!(
-            app.world().resource::<CollectedCues>().0,
-            vec![SfxCue::Placement, SfxCue::LevelUp]
-        );
-    }
-
-    #[test]
-    fn simultaneous_deselect_and_select_request_one_selection_cue() {
-        let mut app = App::new();
-        app.add_message::<TileSelected>()
-            .add_message::<TileDeselected>()
-            .add_message::<SfxCue>()
-            .init_resource::<CollectedCues>()
-            .add_systems(Update, (request_selection_sfx, collect_cues).chain());
-        let old_entity = app.world_mut().spawn_empty().id();
-        let new_entity = app.world_mut().spawn_empty().id();
-        app.world_mut().write_message(TileDeselected {
-            entity: old_entity,
-            coord: TileCoord::ZERO,
-        });
-        app.world_mut().write_message(TileSelected {
-            entity: new_entity,
-            coord: TileCoord::new(1, 0),
-        });
-
-        app.update();
-
-        assert_eq!(
-            app.world().resource::<CollectedCues>().0,
-            vec![SfxCue::Selection]
-        );
-    }
 }
