@@ -8,6 +8,7 @@ use clicker_assets::ClickerAssetsPlugin;
 use clicker_audio::ClickerAudioPlugin;
 use clicker_camera::ClickerCameraPlugin;
 use clicker_gameplay::ClickerGameplayPlugin;
+use clicker_render::ClickerRenderPlugin;
 use clicker_state::GameState;
 use clicker_ui::ClickerUiPlugin;
 
@@ -97,6 +98,7 @@ fn rendered_app() -> App {
         ClickerAssetsPlugin,
         ClickerAudioPlugin,
         ClickerCameraPlugin,
+        ClickerRenderPlugin,
         MainScenePlugin,
         ClickerGameplayPlugin,
         RenderedGluePlugin,

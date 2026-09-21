@@ -1,0 +1,12 @@
+[package]
+name = "clicker_render"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+publish = false
+
+[dependencies]
+bevy.workspace = true
+clicker_assets = { path = "../clicker_assets" }
+clicker_tile = { path = "../clicker_tile" }
+hexx = "0.25.0"

@@ -2379,10 +2379,10 @@ dependencies = [
  "clicker_camera",
  "clicker_debug",
  "clicker_gameplay",
+ "clicker_render",
  "clicker_state",
  "clicker_tile",
  "clicker_ui",
- "hexx",
  "tracing-chrome",
  "tracing-subscriber",
 ]
@@ -2415,6 +2415,16 @@ dependencies = [
  "clicker_state",
  "clicker_tile",
  "serde_json",
+]
+
+[[package]]
+name = "clicker_render"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+ "clicker_assets",
+ "clicker_tile",
+ "hexx",
 ]
 
 [[package]]
