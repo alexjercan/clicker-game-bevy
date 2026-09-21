@@ -36,6 +36,8 @@ Build the WebAssembly launcher:
 trunk build --release
 ```
 
+The WebAssembly build uses the WebGPU render backend, which its particle effects require. Play it in a browser with working WebGPU, such as a recent Chrome, Edge, Safari on macOS or iOS, or Firefox on Windows. Firefox on Linux does not ship WebGPU yet, and the launcher shows a message there instead of starting the game.
+
 This repository contains only the game and its WebAssembly launcher. It does not contain a separate website or landing page.
 
 ### Without Nix

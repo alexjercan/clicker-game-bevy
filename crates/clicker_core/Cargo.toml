@@ -24,6 +24,7 @@ clicker_audio = { path = "../clicker_audio" }
 clicker_camera = { path = "../clicker_camera" }
 clicker_debug = { path = "../clicker_debug", optional = true }
 clicker_gameplay = { path = "../clicker_gameplay" }
+clicker_particles = { path = "../clicker_particles" }
 clicker_render = { path = "../clicker_render" }
 clicker_state = { path = "../clicker_state" }
 clicker_tile = { path = "../clicker_tile" }

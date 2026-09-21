@@ -20,5 +20,9 @@
                 Javascript and support for canvas is required
             </canvas>
         </div>
+        <!-- NOTE: this plain inline script runs during parsing, after the
+             container exists and before trunk's deferred wasm module, so a
+             browser without WebGPU gets a message instead of a dead canvas. -->
+        <link data-trunk rel="inline" href="build/web/webgpu-check.js"/>
     </body>
 </html>
