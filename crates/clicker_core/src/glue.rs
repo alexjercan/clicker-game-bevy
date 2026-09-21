@@ -8,6 +8,7 @@ use clicker_animation::{
     AnimationsEnabled, SpawnAnimationFinished,
 };
 use clicker_assets::{FadingMaterial, GameAssets, BACKGROUND_DARK_COLOR};
+use clicker_camera::{CameraFeedbackSystems, CameraImpulse, CameraShakeSettings};
 use clicker_state::GameState;
 use clicker_tile::{
     HexCoord, HexGhost, HexMap, HexTile, InitializeTileWorld, TileClicked, TileDeselected,
@@ -36,6 +37,16 @@ impl Plugin for RenderedTileGluePlugin {
                 Update,
                 (render_added_ghosts, render_added_tiles)
                     .after(TileSystems::Mutation)
+                    .run_if(in_state(GameState::Playing)),
+            )
+            .configure_sets(
+                Update,
+                CameraFeedbackSystems::Impulse.after(TileSystems::Feedback),
+            )
+            .add_systems(
+                Update,
+                request_camera_impulses
+                    .in_set(TileSystems::Feedback)
                     .run_if(in_state(GameState::Playing)),
             );
         if app.world().contains_resource::<AnimationsEnabled>() {
@@ -117,6 +128,18 @@ fn animate_deselected_tiles(mut commands: Commands, mut events: MessageReader<Ti
 fn animate_clicked_tiles(mut commands: Commands, mut events: MessageReader<TileClicked>) {
     for event in events.read() {
         commands.entity(event.entity).insert(tile_click_animation());
+    }
+}
+
+fn request_camera_impulses(
+    settings: Res<CameraShakeSettings>,
+    mut clicks: MessageReader<TileClicked>,
+    mut impulses: MessageWriter<CameraImpulse>,
+) {
+    for _ in clicks.read() {
+        impulses.write(CameraImpulse {
+            strength: settings.click_impulse,
+        });
     }
 }
 

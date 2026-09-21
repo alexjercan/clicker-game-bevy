@@ -2352,12 +2352,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "clicker_camera"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
+
+[[package]]
 name = "clicker_core"
 version = "0.1.0"
 dependencies = [
  "bevy",
  "clicker_animation",
  "clicker_assets",
+ "clicker_camera",
  "clicker_debug",
  "clicker_gameplay",
  "clicker_state",
