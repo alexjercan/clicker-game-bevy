@@ -15,6 +15,24 @@ pub struct UiAssets {
 }
 
 #[derive(AssetCollection, Resource)]
+pub struct SfxAssets {
+    #[asset(path = "audio/click_empty.wav")]
+    pub click_empty: Handle<AudioSource>,
+    #[asset(path = "audio/click_tree.wav")]
+    pub click_tree: Handle<AudioSource>,
+    #[asset(path = "audio/click_stone.wav")]
+    pub click_stone: Handle<AudioSource>,
+    #[asset(path = "audio/click_wheat.wav")]
+    pub click_wheat: Handle<AudioSource>,
+    #[asset(path = "audio/select.wav")]
+    pub select: Handle<AudioSource>,
+    #[asset(path = "audio/place.wav")]
+    pub place: Handle<AudioSource>,
+    #[asset(path = "audio/level_up.wav")]
+    pub level_up: Handle<AudioSource>,
+}
+
+#[derive(AssetCollection, Resource)]
 pub struct GameAssets {
     #[asset(path = "gltf/tiles/base/hex_grass.gltf")]
     pub hex_base: Handle<Gltf>,
@@ -38,7 +56,8 @@ impl Plugin for ClickerAssetsPlugin {
                 LoadingState::new(GameState::AssetLoading)
                     .continue_to_state(GameState::Playing)
                     .load_collection::<UiAssets>()
-                    .load_collection::<GameAssets>(),
+                    .load_collection::<GameAssets>()
+                    .load_collection::<SfxAssets>(),
             )
             .add_systems(OnEnter(GameState::AssetLoading), setup_asset_loading);
     }

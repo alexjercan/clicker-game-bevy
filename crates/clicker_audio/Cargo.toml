@@ -1,0 +1,14 @@
+[package]
+name = "clicker_audio"
+version = { workspace = true }
+edition = { workspace = true }
+license = { workspace = true }
+publish = false
+
+[dependencies]
+bevy.workspace = true
+clicker_assets = { path = "../clicker_assets" }
+clicker_tile = { path = "../clicker_tile" }
+
+[dev-dependencies]
+rodio = { version = "0.22.2", default-features = false }

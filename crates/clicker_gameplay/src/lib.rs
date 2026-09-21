@@ -2,14 +2,14 @@ mod progression;
 
 use bevy::prelude::*;
 use clicker_state::GameState;
-use clicker_tile::{ClickerTilePlugin, TileSystems};
+use clicker_tile::ClickerTilePlugin;
 
 pub use clicker_tile::{
     tile_is_in_world, ClickTile, GhostClicked, HexCoord, HexGhost, HexMap, HexTile,
     InitializeTileWorld, PlaceTile, TileClicked, TileCoord, TileDeselected, TileKind, TilePlaced,
-    TilePointer, TileSelected, TileSettled, SEED_ENV,
+    TilePointer, TileSelected, TileSettled, TileSystems, SEED_ENV,
 };
-pub use progression::{SkillPoints, XpMax, XpValue};
+pub use progression::{LevelUp, SkillPoints, XpMax, XpValue};
 
 #[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum GameplaySystems {
